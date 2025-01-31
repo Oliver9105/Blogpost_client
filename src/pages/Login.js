@@ -22,18 +22,11 @@ const Login = () => {
       try {
         const response = await fetch("http://localhost:5555/api/login", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(values),
         });
-
         const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || "Login failed");
-        }
-
+        if (!response.ok) throw new Error(data.error || "Login failed");
         alert(data.message); // Show success message
         localStorage.setItem("user", JSON.stringify(data.user)); // Save user data
         navigate("/dashboard"); // Redirect to dashboard
