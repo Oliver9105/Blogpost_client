@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import Post from "../components/Post";
 
 const Dashboard = () => {
   const [posts, setPosts] = useState([]);
@@ -8,17 +9,13 @@ const Dashboard = () => {
       try {
         const response = await fetch("http://localhost:5555/api/dashboard");
         const data = await response.json();
-
-        if (!response.ok) {
+        if (!response.ok)
           throw new Error(data.error || "Failed to fetch posts");
-        }
-
         setPosts(data.posts);
       } catch (error) {
         console.error("Error fetching posts:", error);
       }
     };
-
     fetchPosts();
   }, []);
 
@@ -26,10 +23,7 @@ const Dashboard = () => {
     <div>
       <h1>Dashboard</h1>
       {posts.map((post) => (
-        <div key={post.id}>
-          <h2>{post.title}</h2>
-          <p>{post.content}</p>
-        </div>
+        <Post key={post.id} title={post.title} content={post.content} />
       ))}
     </div>
   );
