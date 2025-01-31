@@ -26,21 +26,15 @@ const CreatePost = () => {
       try {
         const response = await fetch("http://localhost:5555/api/posts", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             ...values,
             user_id: user.id,
           }),
         });
-
         const data = await response.json();
-
-        if (!response.ok) {
+        if (!response.ok)
           throw new Error(data.error || "Failed to create post");
-        }
-
         alert(data.message); // Show success message
         navigate("/dashboard"); // Redirect to dashboard
       } catch (error) {
