@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import Author from "../components/Author";
 
 const Authors = () => {
   const [authors, setAuthors] = useState([]);
@@ -8,17 +9,13 @@ const Authors = () => {
       try {
         const response = await fetch("http://localhost:5555/api/authors");
         const data = await response.json();
-
-        if (!response.ok) {
+        if (!response.ok)
           throw new Error(data.error || "Failed to fetch authors");
-        }
-
         setAuthors(data.authors);
       } catch (error) {
         console.error("Error fetching authors:", error);
       }
     };
-
     fetchAuthors();
   }, []);
 
@@ -26,10 +23,11 @@ const Authors = () => {
     <div>
       <h1>Authors</h1>
       {authors.map((author) => (
-        <div key={author.id}>
-          <h2>{author.username}</h2>
-          <p>{author.email}</p>
-        </div>
+        <Author
+          key={author.id}
+          username={author.username}
+          email={author.email}
+        />
       ))}
     </div>
   );
