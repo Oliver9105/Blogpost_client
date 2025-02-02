@@ -1,83 +1,117 @@
-import React from "react";
-import { useFormik } from "formik";
+import React, { useState, useEffect } from "react";
+import { Formik, Field, Form, ErrorMessage } from "formik";
 import * as Yup from "yup";
-import { useNavigate } from "react-router-dom";
 
 const CreatePost = () => {
-  const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem("user"));
+  const [users, setUsers] = useState([]);
+  const [message, setMessage] = useState("");
 
-  // Formik setup
-  const formik = useFormik({
-    initialValues: {
-      title: "",
-      content: "",
-    },
-    validationSchema: Yup.object({
-      title: Yup.string().required("Title is required"),
-      content: Yup.string().required("Content is required"),
-    }),
-    onSubmit: async (values) => {
-      if (!user || user.role !== "author") {
-        alert("Only authors can create posts.");
-        return;
-      }
+  useEffect(() => {
+    // Fetch all users to populate the dropdown
+    fetch("http://localhost:5555/users")
+      .then((response) => response.json())
+      .then((data) => setUsers(data))
+      .catch((error) => console.error("Error fetching users:", error));
+  }, []);
 
-      try {
-        const response = await fetch("http://localhost:5555/api/posts", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...values,
-            user_id: user.id,
-          }),
-        });
-        const data = await response.json();
-        if (!response.ok)
-          throw new Error(data.error || "Failed to create post");
-        alert(data.message); // Show success message
-        navigate("/dashboard"); // Redirect to dashboard
-      } catch (error) {
-        alert(error.message);
-      }
-    },
+  // Formik validation schema using Yup
+  const validationSchema = Yup.object({
+    title: Yup.string().required("Title is required"),
+    content: Yup.string().required("Content is required"),
+    userId: Yup.string().required("Author is required"),
   });
 
   return (
     <div>
-      <h1>Create Post</h1>
-      <form onSubmit={formik.handleSubmit}>
-        <div>
-          <label htmlFor="title">Title:</label>
-          <input
-            type="text"
-            id="title"
-            name="title"
-            value={formik.values.title}
-            onChange={formik.handleChange}
-            onBlur={formik.handleBlur}
-          />
-          {formik.touched.title && formik.errors.title ? (
-            <div>{formik.errors.title}</div>
-          ) : null}
-        </div>
+      <h2>Create Post</h2>
+      <Formik
+        initialValues={{
+          title: "",
+          content: "",
+          userId: "",
+        }}
+        validationSchema={validationSchema}
+        onSubmit={(values, { setSubmitting }) => {
+          const { title, content, userId } = values;
 
-        <div>
-          <label htmlFor="content">Content:</label>
-          <textarea
-            id="content"
-            name="content"
-            value={formik.values.content}
-            onChange={formik.handleChange}
-            onBlur={formik.handleBlur}
-          />
-          {formik.touched.content && formik.errors.content ? (
-            <div>{formik.errors.content}</div>
-          ) : null}
-        </div>
+          const newPost = {
+            title,
+            content,
+            user_id: userId,
+          };
 
-        <button type="submit">Create Post</button>
-      </form>
+          fetch("http://localhost:5555/posts", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(newPost),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              setMessage("Post created successfully!");
+              setSubmitting(false);
+            })
+            .catch((error) => {
+              console.error("Error creating post:", error);
+              setMessage("Error creating post. Please try again.");
+              setSubmitting(false);
+            });
+        }}
+      >
+        {({ isSubmitting, setFieldValue }) => (
+          <Form>
+            <div>
+              <label htmlFor="title">Title</label>
+              <Field type="text" id="title" name="title" required />
+              <ErrorMessage
+                name="title"
+                component="div"
+                style={{ color: "red" }}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="content">Content</label>
+              <Field as="textarea" id="content" name="content" required />
+              <ErrorMessage
+                name="content"
+                component="div"
+                style={{ color: "red" }}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="userId">Select Author</label>
+              <Field
+                as="select"
+                id="userId"
+                name="userId"
+                onChange={(e) => setFieldValue("userId", e.target.value)}
+                required
+              >
+                <option value="">--Select Author--</option>
+                {users.map((user) => (
+                  <option key={user.id} value={user.id}>
+                    {user.username}
+                  </option>
+                ))}
+              </Field>
+              <ErrorMessage
+                name="userId"
+                component="div"
+                style={{ color: "red" }}
+              />
+            </div>
+
+            <button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Submitting..." : "Create Post"}
+            </button>
+          </Form>
+        )}
+      </Formik>
+
+      {message && <p>{message}</p>}
     </div>
   );
 };

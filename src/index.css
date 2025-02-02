@@ -1,3 +1,147 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Global Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Inter", sans-serif;
+  background-color: #f9fafb;
+  color: #333;
+  line-height: 1.6;
+}
+
+/* Header */
+header {
+  background-color: #3b82f6; /* Tailwind blue-500 */
+  color: #fff;
+  padding: 1rem 0;
+  text-align: center;
+}
+
+header .logo {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+header nav a {
+  color: #fff;
+  margin: 0 1rem;
+  font-size: 1.125rem;
+  text-decoration: none;
+  transition: transform 0.3s ease;
+}
+
+header nav a:hover {
+  transform: scale(1.05);
+  text-decoration: underline;
+}
+
+/* Blog Post List */
+.blog-posts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+  padding: 0 1rem;
+}
+
+.blog-post {
+  background-color: #fff;
+  border-radius: 0.75rem; /* rounded-lg */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.blog-post:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.blog-post h2 {
+  font-size: 1.75rem;
+  color: #2c3e50;
+  margin-bottom: 1rem;
+}
+
+.blog-post p {
+  font-size: 1rem;
+  color: #4b5563;
+  line-height: 1.8;
+}
+
+.blog-post a {
+  display: inline-block;
+  margin-top: 1rem;
+  font-weight: bold;
+  color: #3b82f6; /* Tailwind blue-500 */
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.blog-post a:hover {
+  color: #2563eb; /* Tailwind blue-600 */
+  text-decoration: underline;
+}
+
+/* Blog Post Single */
+.blog-post-single {
+  background-color: #fff;
+  border-radius: 1rem; /* rounded-xl */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 3rem;
+  margin-top: 2rem;
+}
+
+.blog-post-single h1 {
+  font-size: 2.5rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  color: #1f2937;
+}
+
+.blog-post-single .content {
+  font-size: 1.125rem;
+  color: #4b5563;
+  line-height: 1.8;
+}
+
+/* Comments Section */
+.comments-section {
+  margin-top: 3rem;
+}
+
+.comment {
+  background-color: #f3f4f6; /* Tailwind gray-100 */
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 0.75rem; /* rounded-lg */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.comment .author {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #111827;
+}
+
+.comment p {
+  font-size: 1rem;
+  color: #6b7280; /* Tailwind gray-600 */
+}
+
+/* Footer */
+footer {
+  background-color: #1f2937; /* Tailwind gray-800 */
+  color: #fff;
+  text-align: center;
+  padding: 1rem 0;
+  margin-top: 4rem;
+}
+
+footer p {
+  font-size: 1rem;
+}
