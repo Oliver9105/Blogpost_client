@@ -6,7 +6,7 @@ const Home = () => {
 
   useEffect(() => {
     // Fetching posts
-    fetch("http://127.0.0.1:5555/posts")
+    fetch("https://blogpost-app-qx9s.onrender.com/posts")
       .then((response) => response.json())
       .then((data) => setPosts(data))
       .catch((error) => console.error(error));

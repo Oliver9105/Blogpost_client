@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom"; // For getting the postId from the URL
+import { useParams } from "react-router-dom";
 
 const ViewPost = () => {
   const [post, setPost] = useState(null);
@@ -7,23 +7,23 @@ const ViewPost = () => {
   const [selectedUser, setSelectedUser] = useState("");
   const [comment, setComment] = useState("");
   const [users, setUsers] = useState([]);
-  const { id } = useParams(); // Get the postId from the URL
+  const { id } = useParams();
 
   useEffect(() => {
     // Fetch the post by ID
-    fetch(`http://127.0.0.1:5555/posts/${id}`)
+    fetch(`https://blogpost-app-qx9s.onrender.com/posts/${id}`)
       .then((response) => response.json())
       .then((data) => setPost(data))
       .catch((error) => console.error(error));
 
     // Fetch comments for this post
-    fetch(`http://127.0.0.1:5555/posts/${id}/comments`)
+    fetch(`https://blogpost-app-qx9s.onrender.com/posts/${id}/comments`)
       .then((response) => response.json())
       .then((data) => setComments(data))
       .catch((error) => console.error(error));
 
     // Fetch users for dropdown
-    fetch("http://127.0.0.1:5555/users")
+    fetch("https://blogpost-app-qx9s.onrender.com/users")
       .then((response) => response.json())
       .then((data) => setUsers(data))
       .catch((error) => console.error(error));
@@ -35,7 +35,7 @@ const ViewPost = () => {
       return;
     }
 
-    fetch(`http://127.0.0.1:5555/posts/${id}/comments`, {
+    fetch(`https://blogpost-app-qx9s.onrender.com/posts/${id}/comments`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

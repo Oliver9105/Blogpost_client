@@ -7,7 +7,9 @@ const Authors = () => {
   useEffect(() => {
     const fetchAuthors = async () => {
       try {
-        const response = await fetch("http://localhost:5555/api/authors");
+        const response = await fetch(
+          "https://blogpost-app-qx9s.onrender.com/api/authors"
+        );
         const data = await response.json();
         if (!response.ok)
           throw new Error(data.error || "Failed to fetch authors");
