@@ -1,5 +1,3 @@
-// Register.js
-
 import { useState } from "react";
 
 const Register = () => {
@@ -11,6 +9,7 @@ const Register = () => {
     e.preventDefault();
 
     const data = { username, email, password };
+    console.log("Sending data:", data);
 
     try {
       const response = await fetch("http://127.0.0.1:5555/users", {
@@ -21,11 +20,14 @@ const Register = () => {
         body: JSON.stringify(data),
       });
 
+      console.log("Response status:", response.status);
+
       if (response.ok) {
         const user = await response.json();
         console.log("User created:", user);
       } else {
-        console.error("Failed to create user");
+        const errorData = await response.json();
+        console.error("Failed to create user:", errorData);
       }
     } catch (error) {
       console.error("Error:", error);

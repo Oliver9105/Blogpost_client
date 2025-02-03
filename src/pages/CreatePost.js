@@ -40,6 +40,9 @@ const CreatePost = () => {
             user_id: userId,
           };
 
+          // Log the values before sending the request
+          console.log("Submitting post with values:", values);
+
           fetch("http://localhost:5555/posts", {
             method: "POST",
             headers: {
