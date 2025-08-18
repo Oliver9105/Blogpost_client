@@ -8,7 +8,10 @@ const Home = () => {
     // Fetching posts
     fetch("https://blogpost-app-qx9s.onrender.com/posts")
       .then((response) => response.json())
-      .then((data) => setPosts(data))
+      .then((data) => {
+        console.log("Fetched posts:", data);
+        setPosts(Array.isArray(data) ? data : []);
+      })
       .catch((error) => console.error(error));
   }, []);
 
