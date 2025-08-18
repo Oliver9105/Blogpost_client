@@ -10,8 +10,14 @@ const CreatePost = () => {
     // Fetch all users to populate the dropdown
     fetch("https://blogpost-app-qx9s.onrender.com/users")
       .then((response) => response.json())
-      .then((data) => setUsers(data))
-      .catch((error) => console.error("Error fetching users:", error));
+      .then((data) => {
+        console.log("Fetched users:", data); // Debug: check data shape
+        setUsers(Array.isArray(data) ? data : []);
+      })
+      .catch((error) => {
+        console.error("Error fetching users:", error);
+        setUsers([]);
+      });
   }, []);
 
   // Formik validation schema using Yup
