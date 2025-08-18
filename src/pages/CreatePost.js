@@ -8,7 +8,7 @@ const CreatePost = () => {
 
   useEffect(() => {
     // Fetch all users to populate the dropdown
-    fetch("https://blogpost-app-qx9s.onrender.com/users")
+    fetch("http://localhost:5555/users")
       .then((response) => response.json())
       .then((data) => {
         console.log("Fetched users:", data); // Debug: check data shape
@@ -49,7 +49,7 @@ const CreatePost = () => {
           // Log the values before sending the request
           console.log("Submitting post with values:", values);
 
-          fetch("https://blogpost-app-qx9s.onrender.com/posts", {
+          fetch("http://localhost:5555/posts", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",

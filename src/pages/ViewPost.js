@@ -11,19 +11,19 @@ const ViewPost = () => {
 
   useEffect(() => {
     // Fetch the post by ID
-    fetch(`https://blogpost-app-qx9s.onrender.com/posts/${id}`)
+    fetch(`http://localhost:5555/posts/${id}`)
       .then((response) => response.json())
       .then((data) => setPost(data))
       .catch((error) => console.error(error));
 
     // Fetch comments for this post
-    fetch(`https://blogpost-app-qx9s.onrender.com/posts/${id}/comments`)
+    fetch(`http://localhost:5555/posts/${id}/comments`)
       .then((response) => response.json())
       .then((data) => setComments(data))
       .catch((error) => console.error(error));
 
     // Fetch users for dropdown
-    fetch("https://blogpost-app-qx9s.onrender.com/users")
+    fetch("http://localhost:5555/users")
       .then((response) => response.json())
       .then((data) => setUsers(data))
       .catch((error) => console.error(error));
@@ -35,7 +35,7 @@ const ViewPost = () => {
       return;
     }
 
-    fetch(`https://blogpost-app-qx9s.onrender.com/posts/${id}/comments`, {
+    fetch(`http://localhost:5555/posts/${id}/comments`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
