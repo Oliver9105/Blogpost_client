@@ -6,7 +6,7 @@ const Home = () => {
 
   useEffect(() => {
     // Fetching posts
-    fetch("http://localhost:5555/posts")
+    fetch("https://blogpost-app-br7f.onrender.com/posts")
       .then((response) => response.json())
       .then((data) => {
         console.log("Fetched posts:", data);
