@@ -1,0 +1,136 @@
+/* Container */
+.cp-container {
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 0 20px;
+  font-family: "Segoe UI", sans-serif;
+}
+
+/* Breadcrumb */
+.cp-breadcrumb {
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 20px;
+}
+
+.cp-breadcrumb a {
+  color: #0073e6;
+  text-decoration: none;
+}
+
+.cp-breadcrumb span {
+  margin: 0 4px;
+}
+
+/* Headings */
+.cp-heading {
+  font-size: 28px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.cp-subheading {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 30px;
+}
+
+/* Form */
+.cp-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.cp-form > * {
+  margin-bottom: 24px;
+}
+
+/* Labels and Inputs */
+.cp-label {
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+  display: flex;
+  flex-direction: column;
+}
+
+.cp-optional {
+  font-size: 14px;
+  font-weight: 400;
+  color: #999;
+  margin-left: 6px;
+}
+
+.cp-input,
+.cp-select,
+.cp-textarea,
+.cp-editor {
+  margin-top: 8px;
+  padding: 12px;
+  font-size: 15px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background-color: #fff;
+  resize: vertical;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Editor Toolbar */
+.cp-editorToolbar {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.cp-editorToolbar button {
+  background: #f5f5f5;
+  border: 1px solid #ccc;
+  padding: 6px 10px;
+  font-size: 14px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.cp-editorToolbar button:hover {
+  background-color: #e0e0e0;
+}
+
+/* Action Buttons */
+.cp-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 32px;
+  padding-bottom: 40px;
+}
+
+.cp-primary {
+  background-color: #0073e6;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 15px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.cp-primary:hover {
+  background-color: #005bb5;
+}
+
+.cp-secondary {
+  background-color: #f5f5f5;
+  color: #333;
+  border: 1px solid #ccc;
+  padding: 10px 20px;
+  font-size: 15px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.cp-secondary:hover {
+  background-color: #e0e0e0;
+}
