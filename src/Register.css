@@ -1,0 +1,133 @@
+.register-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+  background-color: #f9f9f9;
+  min-height: 100vh;
+}
+
+.register-form {
+  width: 400px;
+  background: #fff;
+  padding: 32px;
+  border-radius: 8px;
+  box-shadow: 0 0 0 1px #ddd;
+  font-family: "Segoe UI", sans-serif;
+}
+
+.register-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.register-subtitle {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 24px;
+}
+
+.register-label {
+  display: flex;
+  flex-direction: column;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.register-input {
+  margin-top: 6px;
+  padding: 10px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  transition: border-color 0.2s ease;
+}
+
+.register-input:focus {
+  border-color: #0052cc;
+  outline: none;
+}
+
+.register-passwordStrength {
+  font-size: 12px;
+  color: #999;
+  margin-top: 4px;
+}
+
+.register-checkboxContainer {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+
+.register-checkboxContainer input {
+  margin-right: 8px;
+}
+
+.register-checkboxContainer a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.register-checkboxContainer a:hover {
+  text-decoration: underline;
+}
+
+.register-createBtn {
+  width: 100%;
+  padding: 10px;
+  background-color: #0052cc;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.register-createBtn:hover {
+  background-color: #003fa3;
+}
+
+.register-googleBtn {
+  width: 100%;
+  padding: 10px;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.register-googleBtn:hover {
+  border-color: #999;
+}
+
+.register-loginLink {
+  text-align: center;
+  font-size: 13px;
+  margin-top: 16px;
+}
+
+.register-loginLink a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.register-loginLink a:hover {
+  text-decoration: underline;
+}
+
+.register-error {
+  font-size: 12px;
+  color: #d9534f;
+  margin-top: 4px;
+}
