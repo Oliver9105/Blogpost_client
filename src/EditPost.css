@@ -1,0 +1,111 @@
+/* Container */
+.edit-post-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px;
+  font-family: "Inter", sans-serif;
+  background-color: #f4f4f4;
+  color: #333;
+}
+
+/* Header */
+.edit-post-title {
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+
+.edit-post-subtitle {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 32px;
+}
+
+/* Grid Layout */
+.edit-post-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+}
+
+@media (max-width: 900px) {
+  .edit-post-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Form */
+.edit-post-form {
+  background-color: #fff;
+  padding: 24px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.edit-post-form label {
+  display: block;
+  margin-top: 20px;
+  font-weight: 600;
+}
+
+.edit-post-form input[type="text"],
+.edit-post-form textarea {
+  width: 100%;
+  padding: 12px;
+  margin-top: 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.edit-post-form textarea {
+  height: 200px;
+  resize: vertical;
+  font-family: monospace;
+}
+
+/* Footer */
+.edit-post-form .form-footer {
+  margin-top: 20px;
+}
+
+.edit-post-form .formatting-toggle {
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Live Preview */
+.edit-post-preview {
+  background-color: #fff;
+  padding: 24px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.edit-post-preview .preview-title {
+  font-size: 20px;
+  margin-bottom: 16px;
+}
+
+.edit-post-preview .preview-content {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #444;
+  margin-bottom: 24px;
+}
+
+/* Button */
+.edit-post-preview .save-button {
+  padding: 10px 20px;
+  background-color: #0078d4;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.edit-post-preview .save-button:hover {
+  background-color: #005fa3;
+}
