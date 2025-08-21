@@ -1,127 +1,126 @@
-import React, { useState, useEffect } from "react";
-import { Formik, Field, Form, ErrorMessage } from "formik";
-import * as Yup from "yup";
+import { useState } from "react";
+import "../CreatePost.css";
 
 const CreatePost = () => {
-  const [users, setUsers] = useState([]);
-  const [message, setMessage] = useState("");
+  const [title, setTitle] = useState("");
+  const [category, setCategory] = useState("");
+  const [excerpt, setExcerpt] = useState("");
+  const [content, setContent] = useState("");
 
-  useEffect(() => {
-    // Fetch all users to populate the dropdown
-    fetch("https://blogpost-app-br7f.onrender.com/users")
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("Fetched users:", data); // Debug: check data shape
-        setUsers(Array.isArray(data) ? data : []);
-      })
-      .catch((error) => {
-        console.error("Error fetching users:", error);
-        setUsers([]);
-      });
-  }, []);
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const postData = { title, category, excerpt, content };
+    console.log("Publishing post:", postData);
+    // TODO: Send to backend
+  };
 
-  // Formik validation schema using Yup
-  const validationSchema = Yup.object({
-    title: Yup.string().required("Title is required"),
-    content: Yup.string().required("Content is required"),
-    userId: Yup.string().required("Author is required"),
-  });
+  const handleSaveDraft = () => {
+    const draftData = { title, category, excerpt, content };
+    console.log("Saving draft:", draftData);
+    // TODO: Save locally or via API
+  };
 
   return (
-    <div>
-      <h2>Create Post</h2>
-      <Formik
-        initialValues={{
-          title: "",
-          content: "",
-          userId: "",
-        }}
-        validationSchema={validationSchema}
-        onSubmit={(values, { setSubmitting }) => {
-          const { title, content, userId } = values;
+    <main className="cp-container">
+      <nav className="cp-breadcrumb">
+        <a href="/">Home</a> <span>›</span> <span>Create Post</span>
+      </nav>
 
-          const newPost = {
-            title,
-            content,
-            user_id: userId,
-          };
+      <h1 className="cp-heading">Create New Post</h1>
+      <p className="cp-subheading">
+        Compose your article and share it with the world.
+      </p>
 
-          // Log the values before sending the request
-          console.log("Submitting post with values:", values);
+      <form className="cp-form" onSubmit={handleSubmit}>
+        <label className="cp-label" htmlFor="title">
+          Post Title
+          <input
+            type="text"
+            id="title"
+            className="cp-input"
+            placeholder="Enter an engaging title for your post"
+            maxLength={100}
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            required
+          />
+        </label>
 
-          fetch("https://blogpost-app-br7f.onrender.com/posts", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(newPost),
-          })
-            .then((response) => response.json())
-            .then((data) => {
-              setMessage("Post created successfully!");
-              setSubmitting(false);
-            })
-            .catch((error) => {
-              console.error("Error creating post:", error);
-              setMessage("Error creating post. Please try again.");
-              setSubmitting(false);
-            });
-        }}
-      >
-        {({ isSubmitting, setFieldValue }) => (
-          <Form>
-            <div>
-              <label htmlFor="title">Title</label>
-              <Field type="text" id="title" name="title" required />
-              <ErrorMessage
-                name="title"
-                component="div"
-                style={{ color: "red" }}
-              />
-            </div>
+        <label className="cp-label" htmlFor="category">
+          Category
+          <select
+            id="category"
+            className="cp-select"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            required
+          >
+            <option value="">Select a category</option>
+            <option value="tech">Tech</option>
+            <option value="lifestyle">Lifestyle</option>
+            <option value="travel">Travel</option>
+          </select>
+        </label>
 
-            <div>
-              <label htmlFor="content">Content</label>
-              <Field as="textarea" id="content" name="content" required />
-              <ErrorMessage
-                name="content"
-                component="div"
-                style={{ color: "red" }}
-              />
-            </div>
+        <label className="cp-label" htmlFor="excerpt">
+          Excerpt / Summary <span className="cp-optional">(Optional)</span>
+          <textarea
+            id="excerpt"
+            className="cp-textarea"
+            placeholder="Write a short, compelling summary to catch your reader’s attention."
+            rows={3}
+            value={excerpt}
+            onChange={(e) => setExcerpt(e.target.value)}
+          />
+        </label>
 
-            <div>
-              <label htmlFor="userId">Select Author</label>
-              <Field
-                as="select"
-                id="userId"
-                name="userId"
-                onChange={(e) => setFieldValue("userId", e.target.value)}
-                required
-              >
-                <option value="">--Select Author--</option>
-                {users.map((user) => (
-                  <option key={user.id} value={user.id}>
-                    {user.username}
-                  </option>
-                ))}
-              </Field>
-              <ErrorMessage
-                name="userId"
-                component="div"
-                style={{ color: "red" }}
-              />
-            </div>
-
-            <button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Submitting..." : "Create Post"}
+        <label className="cp-label" htmlFor="content">
+          Post Content
+          <div className="cp-editorToolbar">
+            <button type="button" title="Bold">
+              <strong>B</strong>
             </button>
-          </Form>
-        )}
-      </Formik>
+            <button type="button" title="Italic">
+              <em>I</em>
+            </button>
+            <button type="button" title="Underline">
+              <u>U</u>
+            </button>
+            <button type="button" title="Link">
+              🔗
+            </button>
+            <button type="button" title="List">
+              • List
+            </button>
+          </div>
+          <textarea
+            id="content"
+            className="cp-editor"
+            placeholder="Start writing your masterpiece..."
+            rows={10}
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            required
+          />
+        </label>
 
-      {message && <p>{message}</p>}
-    </div>
+        <div className="cp-actions">
+          <button type="reset" className="cp-secondary">
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="cp-secondary"
+            onClick={handleSaveDraft}
+          >
+            Save Draft
+          </button>
+          <button type="submit" className="cp-primary">
+            Publish Post
+          </button>
+        </div>
+      </form>
+    </main>
   );
 };
 
