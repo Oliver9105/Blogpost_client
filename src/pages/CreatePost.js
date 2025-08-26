@@ -7,11 +7,52 @@ const CreatePost = () => {
   const [excerpt, setExcerpt] = useState("");
   const [content, setContent] = useState("");
 
-  const handleSubmit = (e) => {
+  // Replace with actual user ID from auth context/session
+  const userId = 1;
+
+  // Map category name to backend category ID
+  const getCategoryId = (name) => {
+    const map = {
+      tech: 1,
+      lifestyle: 2,
+      travel: 3,
+    };
+    return map[name] || null;
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const postData = { title, category, excerpt, content };
-    console.log("Publishing post:", postData);
-    // TODO: Send to backend
+
+    const postData = {
+      title,
+      content,
+      user_id: userId,
+      category_id: getCategoryId(category),
+      tag_ids: [], // Optional: add tag support later
+    };
+
+    try {
+      const response = await fetch(
+        "https://blogpost-app-br7f.onrender.com/posts",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(postData),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log("Post published successfully:", result);
+      // Optionally reset form or redirect
+    } catch (error) {
+      console.error("Failed to publish post:", error);
+    }
   };
 
   const handleSaveDraft = () => {
