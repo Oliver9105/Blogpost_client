@@ -13,6 +13,7 @@ const Register = () => {
 
   const [errors, setErrors] = useState({});
   const [submitted, setSubmitted] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -76,109 +77,154 @@ const Register = () => {
     }
   };
 
+  const handleSearch = (e) => {
+    e.preventDefault();
+    // Handle search logic here
+    console.log("Search submitted:", searchQuery);
+  };
+
+  const handleWritePost = () => {
+    // Handle write post logic here
+    console.log("Write post clicked");
+  };
+
   return (
-    <div className="register-wrapper">
-      <form className="register-form" onSubmit={handleSubmit} noValidate>
-        <h2 className="register-title">Create Your Account</h2>
-        <p className="register-subtitle">
-          Join our community and start sharing your thoughts
-        </p>
-
-        <label className="register-label">
-          Username
-          <input
-            type="text"
-            name="username"
-            className="register-input"
-            placeholder="Enter your username"
-            value={form.username}
-            onChange={handleChange}
-          />
-          {submitted && errors.username && (
-            <span className="register-error">{errors.username}</span>
-          )}
-        </label>
-
-        <label className="register-label">
-          Email Address
-          <input
-            type="email"
-            name="email"
-            className="register-input"
-            placeholder="Enter your email"
-            value={form.email}
-            onChange={handleChange}
-          />
-          {submitted && errors.email && (
-            <span className="register-error">{errors.email}</span>
-          )}
-        </label>
-
-        <label className="register-label">
-          Password
-          <input
-            type="password"
-            name="password"
-            className="register-input"
-            placeholder="Create a strong password"
-            value={form.password}
-            onChange={handleChange}
-          />
-          <span className="register-passwordStrength">
-            Password strength: {form.password.length < 6 ? "Weak" : "Strong"}
-          </span>
-          {submitted && errors.password && (
-            <span className="register-error">{errors.password}</span>
-          )}
-        </label>
-
-        <label className="register-label">
-          Confirm Password
-          <input
-            type="password"
-            name="confirmPassword"
-            className="register-input"
-            placeholder="Confirm your password"
-            value={form.confirmPassword}
-            onChange={handleChange}
-          />
-          {submitted && errors.confirmPassword && (
-            <span className="register-error">{errors.confirmPassword}</span>
-          )}
-        </label>
-
-        <label className="register-checkboxContainer">
-          <input
-            type="checkbox"
-            name="agreed"
-            checked={form.agreed}
-            onChange={handleChange}
-          />
-          <span>
-            I agree to the <a href="/terms">Terms of Service</a> and{" "}
-            <a href="/privacy">Privacy Policy</a>
-          </span>
-        </label>
-        {submitted && errors.agreed && (
-          <span className="register-error">{errors.agreed}</span>
-        )}
-
-        <button type="submit" className="register-createBtn">
-          Create Account
-        </button>
-
-        <button type="button" className="register-googleBtn">
-          <img src="/google-icon.svg" alt="Google" />
-          Sign up with Google
-        </button>
-
-        <p className="register-loginLink">
-          Already have an account?{" "}
-          <Link to="/signin" className="home-auth-button secondary">
-            Log in
+    <div className="register-container">
+      {/* Header with proper namespacing */}
+      <header className="register-view-post-header">
+        <div className="register-view-post-nav-container">
+          <Link to="/" className="register-view-post-logo">
+            BlogHub
           </Link>
-        </p>
-      </form>
+          <nav className="register-view-post-nav-links">
+            <Link to="/" className="register-view-post-nav-link">
+              Home
+            </Link>
+            <button
+              className="register-view-post-write-button"
+              onClick={handleWritePost}
+            >
+              Write Post
+            </button>
+          </nav>
+          <form
+            className="register-view-post-search-bar"
+            onSubmit={handleSearch}
+          >
+            <i className="fas fa-search"></i>
+            <input
+              type="text"
+              placeholder="Search posts..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </form>
+        </div>
+      </header>
+
+      <div className="register-wrapper">
+        <form className="register-form" onSubmit={handleSubmit} noValidate>
+          <h2 className="register-title">Create Your Account</h2>
+          <p className="register-subtitle">
+            Join our community and start sharing your thoughts
+          </p>
+
+          <label className="register-label">
+            Username
+            <input
+              type="text"
+              name="username"
+              className="register-input"
+              placeholder="Enter your username"
+              value={form.username}
+              onChange={handleChange}
+            />
+            {submitted && errors.username && (
+              <span className="register-error">{errors.username}</span>
+            )}
+          </label>
+
+          <label className="register-label">
+            Email Address
+            <input
+              type="email"
+              name="email"
+              className="register-input"
+              placeholder="Enter your email"
+              value={form.email}
+              onChange={handleChange}
+            />
+            {submitted && errors.email && (
+              <span className="register-error">{errors.email}</span>
+            )}
+          </label>
+
+          <label className="register-label">
+            Password
+            <input
+              type="password"
+              name="password"
+              className="register-input"
+              placeholder="Create a strong password"
+              value={form.password}
+              onChange={handleChange}
+            />
+            <span className="register-passwordStrength">
+              Password strength: {form.password.length < 6 ? "Weak" : "Strong"}
+            </span>
+            {submitted && errors.password && (
+              <span className="register-error">{errors.password}</span>
+            )}
+          </label>
+
+          <label className="register-label">
+            Confirm Password
+            <input
+              type="password"
+              name="confirmPassword"
+              className="register-input"
+              placeholder="Confirm your password"
+              value={form.confirmPassword}
+              onChange={handleChange}
+            />
+            {submitted && errors.confirmPassword && (
+              <span className="register-error">{errors.confirmPassword}</span>
+            )}
+          </label>
+
+          <label className="register-checkboxContainer">
+            <input
+              type="checkbox"
+              name="agreed"
+              checked={form.agreed}
+              onChange={handleChange}
+            />
+            <span>
+              I agree to the <a href="/terms">Terms of Service</a> and{" "}
+              <a href="/privacy">Privacy Policy</a>
+            </span>
+          </label>
+          {submitted && errors.agreed && (
+            <span className="register-error">{errors.agreed}</span>
+          )}
+
+          <button type="submit" className="register-createBtn">
+            Create Account
+          </button>
+
+          <button type="button" className="register-googleBtn">
+            <img src="/google-icon.svg" alt="Google" />
+            Sign up with Google
+          </button>
+
+          <p className="register-loginLink">
+            Already have an account?{" "}
+            <Link to="/signin" className="register-loginLink-button">
+              Log in
+            </Link>
+          </p>
+        </form>
+      </div>
     </div>
   );
 };
