@@ -1,23 +1,52 @@
-import React from "react";
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import "../SignIn.css";
 
 const SignIn = () => {
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    // Handle search logic here
+    console.log("Search submitted:", searchQuery);
+  };
+
+  const handleWritePost = () => {
+    // Handle write post logic here
+    console.log("Write post clicked");
+  };
+
   return (
     <div className="signin-container">
       <header className="signin-header">
         <nav className="signin-nav">
-          <div className="signin-logo">BlogSpace</div>
-          <ul className="signin-navLinks">
-            <li>
-              <a href="/">Home</a>
-            </li>
-            <li>
-              <a href="/about">About Us</a>
-            </li>
-            <li>
-              <a href="/login">Login</a>
-            </li>
-          </ul>
+          <div className="signin-logo">BlogHub</div>
+
+          {/* Centered Navigation Links */}
+          <div className="signin-nav-center">
+            <ul className="signin-navLinks">
+              <li>
+                <a href="/">Home</a>
+              </li>
+              <li>
+                <a href="/about">About Us</a>
+              </li>
+            </ul>
+            <button className="signin-write-button" onClick={handleWritePost}>
+              Write Post
+            </button>
+          </div>
+
+          {/* Search Bar */}
+          <form className="signin-search-bar" onSubmit={handleSearch}>
+            <i className="fas fa-search"></i>
+            <input
+              type="text"
+              placeholder="Search posts..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </form>
         </nav>
       </header>
 
@@ -65,7 +94,7 @@ const SignIn = () => {
             </div>
 
             <p className="signin-signup">
-              Don’t have an account? <a href="/signup">Create account</a>
+              Don't have an account? <a href="/signup">Create account</a>
             </p>
           </form>
         </div>
@@ -108,14 +137,12 @@ const SignIn = () => {
                 <a href="/terms">Terms of Service</a>
               </li>
               <li>
-                <a href="mailto:support@blogspace.com">Contact</a>
+                <a href="mailto:support@bloghub.com">Contact</a>
               </li>
             </ul>
           </div>
         </div>
-        <p className="signin-copyright">
-          © 2025 BlogSpace. All rights reserved.
-        </p>
+        <p className="signin-copyright">© 2025 BlogHub. All rights reserved.</p>
       </footer>
     </div>
   );
