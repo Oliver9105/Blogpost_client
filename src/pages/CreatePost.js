@@ -6,11 +6,11 @@ const CreatePost = () => {
   const [category, setCategory] = useState("");
   const [excerpt, setExcerpt] = useState("");
   const [content, setContent] = useState("");
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
 
-  // Replace with actual user ID from auth context/session
   const userId = 1;
 
-  // Map category name to backend category ID
   const getCategoryId = (name) => {
     const map = {
       tech: 1,
@@ -18,6 +18,17 @@ const CreatePost = () => {
       travel: 3,
     };
     return map[name] || null;
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    } else {
+      setImageFile(null);
+      setImagePreview(null);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -28,7 +39,7 @@ const CreatePost = () => {
       content,
       user_id: userId,
       category_id: getCategoryId(category),
-      tag_ids: [], // Optional: add tag support later
+      tag_ids: [],
     };
 
     try {
@@ -49,7 +60,6 @@ const CreatePost = () => {
 
       const result = await response.json();
       console.log("Post published successfully:", result);
-      // Optionally reset form or redirect
     } catch (error) {
       console.error("Failed to publish post:", error);
     }
@@ -58,7 +68,6 @@ const CreatePost = () => {
   const handleSaveDraft = () => {
     const draftData = { title, category, excerpt, content };
     console.log("Saving draft:", draftData);
-    // TODO: Save locally or via API
   };
 
   return (
@@ -113,6 +122,22 @@ const CreatePost = () => {
             value={excerpt}
             onChange={(e) => setExcerpt(e.target.value)}
           />
+        </label>
+
+        <label className="cp-label" htmlFor="image">
+          Featured Image <span className="cp-optional">(Optional)</span>
+          <input
+            type="file"
+            id="image"
+            accept="image/*"
+            className="cp-input"
+            onChange={handleImageChange}
+          />
+          {imagePreview && (
+            <div className="cp-imagePreview">
+              <img src={imagePreview} alt="Preview" className="cp-previewImg" />
+            </div>
+          )}
         </label>
 
         <label className="cp-label" htmlFor="content">
