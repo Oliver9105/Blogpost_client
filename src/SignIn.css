@@ -26,6 +26,13 @@
   color: #1a73e8;
 }
 
+/* Centered Navigation */
+.signin-nav-center {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
 .signin-navLinks {
   list-style: none;
   display: flex;
@@ -36,6 +43,44 @@
   text-decoration: none;
   color: #333;
   font-weight: 500;
+}
+
+.signin-write-button {
+  background-color: #1a73e8;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.signin-write-button:hover {
+  background-color: #1665c1;
+}
+
+/* Search Bar */
+.signin-search-bar {
+  display: flex;
+  align-items: center;
+  background: #f5f5f5;
+  border-radius: 20px;
+  padding: 8px 16px;
+  width: 250px;
+}
+
+.signin-search-bar i {
+  color: #777;
+  margin-right: 8px;
+}
+
+.signin-search-bar input {
+  border: none;
+  background: transparent;
+  outline: none;
+  width: 100%;
+  font-size: 14px;
 }
 
 .signin-main {
@@ -211,4 +256,27 @@
   font-size: 12px;
   color: #999;
   text-align: center;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .signin-nav {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .signin-nav-center {
+    order: 2;
+  }
+
+  .signin-search-bar {
+    order: 3;
+    width: 100%;
+    margin-top: 16px;
+  }
+
+  .signin-footerGrid {
+    flex-direction: column;
+    gap: 20px;
+  }
 }
