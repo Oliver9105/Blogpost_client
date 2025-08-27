@@ -1,3 +1,96 @@
+/* Header Styles for CreatePost */
+.cp-header {
+  background: #ffffff;
+  border-bottom: 1px solid #f1f5f9;
+  padding: 1rem 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(10px);
+}
+
+.cp-header-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cp-header-logo {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2563eb;
+  text-decoration: none;
+  letter-spacing: -0.5px;
+}
+
+.cp-header-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.cp-header-nav-link {
+  color: #64748b;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: color 0.2s ease;
+}
+
+.cp-header-nav-link:hover {
+  color: #2563eb;
+}
+
+.cp-header-write-button {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.cp-header-write-button:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.cp-header-search-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.cp-header-search-bar i {
+  position: absolute;
+  left: 12px;
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.cp-header-search-bar input {
+  padding: 0.6rem 1rem 0.6rem 2.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  width: 280px;
+  font-size: 0.9rem;
+  background: #f8fafc;
+  transition: all 0.2s ease;
+}
+
+.cp-header-search-bar input:focus {
+  outline: none;
+  border-color: #2563eb;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
 /* Container */
 .cp-container {
   max-width: 800px;
@@ -133,4 +226,78 @@
 
 .cp-secondary:hover {
   background-color: #e0e0e0;
+}
+
+/* Image Preview */
+.cp-imagePreview {
+  margin-top: 10px;
+}
+
+.cp-previewImg {
+  max-width: 100%;
+  max-height: 300px;
+  border-radius: 6px;
+  border: 1px solid #eee;
+}
+
+/* Responsive Design for Header */
+@media (max-width: 768px) {
+  .cp-header-container {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 0 1.5rem;
+  }
+
+  .cp-header-search-bar input {
+    width: 100%;
+    max-width: 300px;
+  }
+
+  .cp-container {
+    margin: 20px auto;
+    padding: 0 15px;
+  }
+
+  .cp-heading {
+    font-size: 24px;
+  }
+
+  .cp-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+@media (max-width: 480px) {
+  .cp-header-nav-links {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .cp-header-search-bar {
+    width: 100%;
+  }
+
+  .cp-header-search-bar input {
+    width: 100%;
+  }
+
+  .cp-heading {
+    font-size: 22px;
+  }
+
+  .cp-editorToolbar {
+    justify-content: center;
+  }
+}
+
+/* Focus states for accessibility */
+.cp-header button:focus,
+.cp-header input:focus,
+.cp-input:focus,
+.cp-select:focus,
+.cp-textarea:focus,
+.cp-editor:focus {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
 }
