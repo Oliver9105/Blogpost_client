@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import "../CreatePost.css";
 
 const CreatePost = () => {
@@ -7,9 +6,7 @@ const CreatePost = () => {
   const [category, setCategory] = useState("");
   const [excerpt, setExcerpt] = useState("");
   const [content, setContent] = useState("");
-  const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
-  const [searchQuery, setSearchQuery] = useState("");
 
   const userId = 1;
 
@@ -25,10 +22,8 @@ const CreatePost = () => {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setImageFile(file);
       setImagePreview(URL.createObjectURL(file));
     } else {
-      setImageFile(null);
       setImagePreview(null);
     }
   };
@@ -72,49 +67,8 @@ const CreatePost = () => {
     console.log("Saving draft:", draftData);
   };
 
-  const handleWritePost = () => {
-    // This function can be used to navigate to the create post page
-    // Since we're already on the create post page, we might not need to do anything
-    // Or we could refresh the page to start a new post
-    window.location.reload();
-  };
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    // Handle search functionality here
-    console.log("Searching for:", searchQuery);
-  };
-
   return (
     <div>
-      <header className="cp-header">
-        <div className="cp-header-container">
-          <Link to="/" className="cp-header-logo">
-            BlogHub
-          </Link>
-          <nav className="cp-header-nav-links">
-            <Link to="/" className="cp-header-nav-link">
-              Home
-            </Link>
-            <button
-              className="cp-header-write-button"
-              onClick={handleWritePost}
-            >
-              Write Post
-            </button>
-          </nav>
-          <form className="cp-header-search-bar" onSubmit={handleSearch}>
-            <i className="fas fa-search"></i>
-            <input
-              type="text"
-              placeholder="Search posts..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </form>
-        </div>
-      </header>
-
       <main className="cp-container">
         <nav className="cp-breadcrumb">
           <a href="/">Home</a> <span>›</span> <span>Create Post</span>

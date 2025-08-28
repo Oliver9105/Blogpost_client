@@ -11,7 +11,6 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -26,8 +25,6 @@ const Home = () => {
         const data = await response.json();
         setPosts(Array.isArray(data) ? data : []);
       } catch (err) {
-        console.error("Error fetching posts:", err);
-        setError(err.message);
       } finally {
         setLoading(false);
       }
@@ -100,29 +97,6 @@ const Home = () => {
 
   return (
     <div className="home-container">
-      {/* Header */}
-      <header className="home-navbar">
-        <div className="home-navbar-left">
-          <div className="home-logo">BlogHub</div>
-        </div>
-        <nav className="home-navbar-center">
-          <Link to="/" className="home-nav-link">
-            Home
-          </Link>
-          <Link to="/create" className="home-nav-link">
-            Write Post
-          </Link>
-        </nav>
-        <div className="home-navbar-right">
-          <Link to="/register" className="home-auth-button">
-            Register
-          </Link>
-          <Link to="/signin" className="home-auth-button secondary">
-            Sign In
-          </Link>
-        </div>
-      </header>
-
       {/* Hero */}
       <section className="home-hero">
         <h1>Welcome to BlogHub</h1>

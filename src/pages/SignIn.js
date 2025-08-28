@@ -2,18 +2,48 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import "../SignIn.css";
 
-const SignIn = () => {
-  const [searchQuery, setSearchQuery] = useState("");
+const SignIn = ({ onLogin }) => {
+  const [credentials, setCredentials] = useState({
+    email: "",
+    password: "",
+  });
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    // Handle search logic here
-    console.log("Search submitted:", searchQuery);
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setCredentials((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
-  const handleWritePost = () => {
-    // Handle write post logic here
-    console.log("Write post clicked");
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      // Replace with your actual API endpoint
+      const response = await fetch(
+        "https://blogpost-app-br7f.onrender.com/auth/login",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(credentials),
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        // Call the onLogin function passed from App.js
+        onLogin(data.user, data.token);
+      } else {
+        const errorData = await response.json();
+        alert(errorData.message || "Login failed");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      alert("An error occurred during login");
+    }
   };
 
   return (
@@ -21,32 +51,17 @@ const SignIn = () => {
       <header className="signin-header">
         <nav className="signin-nav">
           <div className="signin-logo">BlogHub</div>
-
-          {/* Centered Navigation Links */}
-          <div className="signin-nav-center">
-            <ul className="signin-navLinks">
-              <li>
-                <a href="/">Home</a>
-              </li>
-              <li>
-                <a href="/about">About Us</a>
-              </li>
-            </ul>
-            <button className="signin-write-button" onClick={handleWritePost}>
-              Write Post
-            </button>
-          </div>
-
-          {/* Search Bar */}
-          <form className="signin-search-bar" onSubmit={handleSearch}>
-            <i className="fas fa-search"></i>
-            <input
-              type="text"
-              placeholder="Search posts..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </form>
+          <ul className="signin-navLinks">
+            <li>
+              <a href="/">Home</a>
+            </li>
+            <li>
+              <a href="/about">About Us</a>
+            </li>
+            <li>
+              <a href="/signin">Login</a>
+            </li>
+          </ul>
         </nav>
       </header>
 
@@ -54,15 +69,19 @@ const SignIn = () => {
         <div className="signin-card">
           <h2 className="signin-title">Welcome Back</h2>
           <p className="signin-subtitle">Log in to continue to our platform.</p>
-          <form className="signin-form">
+          <form className="signin-form" onSubmit={handleSubmit}>
             <label htmlFor="email" className="signin-label">
               Email or Username
             </label>
             <input
               type="text"
               id="email"
+              name="email"
               className="signin-input"
               placeholder="Email or Username"
+              value={credentials.email}
+              onChange={handleChange}
+              required
             />
 
             <label htmlFor="password" className="signin-label">
@@ -71,8 +90,12 @@ const SignIn = () => {
             <input
               type="password"
               id="password"
+              name="password"
               className="signin-input"
               placeholder="Password"
+              value={credentials.password}
+              onChange={handleChange}
+              required
             />
 
             <div className="signin-options">
@@ -94,7 +117,7 @@ const SignIn = () => {
             </div>
 
             <p className="signin-signup">
-              Don't have an account? <a href="/signup">Create account</a>
+              Don't have an account? <Link to="/register">Create account</Link>
             </p>
           </form>
         </div>
@@ -117,7 +140,7 @@ const SignIn = () => {
             <h4>Account</h4>
             <ul>
               <li>
-                <a href="/login">Login</a>
+                <a href="/signin">Login</a>
               </li>
               <li>
                 <a href="/reset">Forgot Password</a>

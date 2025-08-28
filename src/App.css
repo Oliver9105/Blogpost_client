@@ -1,0 +1,163 @@
+/* App.css */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  line-height: 1.6;
+  color: #333;
+  background-color: #f9f9f9;
+}
+
+.App {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header Styles */
+.view-post-header {
+  background-color: #fff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 1rem 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 1px solid #ddd;
+}
+
+.view-post-nav-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.view-post-logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #1a73e8;
+  text-decoration: none;
+}
+
+.view-post-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.view-post-nav-link {
+  color: #555;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.3s;
+}
+
+.view-post-nav-link:hover {
+  color: #1a73e8;
+}
+
+.view-post-write-button {
+  background-color: #1a73e8;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.3s;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.view-post-write-button:hover {
+  background-color: #1665c1;
+}
+
+.view-post-search-bar {
+  display: flex;
+  align-items: center;
+  background: #f5f5f5;
+  border-radius: 20px;
+  padding: 0.5rem 1rem;
+  width: 300px;
+}
+
+.view-post-search-bar i {
+  color: #777;
+  margin-right: 0.5rem;
+}
+
+.view-post-search-bar input {
+  border: none;
+  background: transparent;
+  outline: none;
+  width: 100%;
+  font-size: 14px;
+}
+
+.auth-section {
+  display: flex;
+  align-items: center;
+}
+
+.auth-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.auth-button {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.auth-button:not(.primary) {
+  color: #555;
+  border: 1px solid #ddd;
+}
+
+.auth-button.primary {
+  background-color: #1a73e8;
+  color: white;
+  border: none;
+}
+
+.auth-button:hover {
+  opacity: 0.9;
+}
+
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.logout-btn {
+  background: none;
+  border: 1px solid #ddd;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .view-post-nav-container {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 0 1rem;
+  }
+
+  .view-post-search-bar {
+    width: 100%;
+    margin-top: 1rem;
+  }
+}
