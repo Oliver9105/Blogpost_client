@@ -48,23 +48,6 @@ const SignIn = ({ onLogin }) => {
 
   return (
     <div className="signin-container">
-      <header className="signin-header">
-        <nav className="signin-nav">
-          <div className="signin-logo">BlogHub</div>
-          <ul className="signin-navLinks">
-            <li>
-              <a href="/">Home</a>
-            </li>
-            <li>
-              <a href="/about">About Us</a>
-            </li>
-            <li>
-              <a href="/signin">Login</a>
-            </li>
-          </ul>
-        </nav>
-      </header>
-
       <main className="signin-main">
         <div className="signin-card">
           <h2 className="signin-title">Welcome Back</h2>
