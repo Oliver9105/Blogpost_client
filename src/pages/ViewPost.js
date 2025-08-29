@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import "../ViewPost.css";
 
-const API_BASE_URL = "https://blogpost-app-br7f.onrender.com";
+const API_BASE_URL = "http://localhost:5555";
 
 const ViewPost = () => {
   const { id } = useParams();
@@ -13,7 +13,6 @@ const ViewPost = () => {
   const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [searchQuery, setSearchQuery] = useState("");
   const [replyingTo, setReplyingTo] = useState(null);
   const [replyContent, setReplyContent] = useState("");
   const [email, setEmail] = useState("");
@@ -83,17 +82,6 @@ const ViewPost = () => {
 
     fetchData();
   }, [id]);
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      setNotification({
-        message: `Searching for: ${searchQuery}`,
-        type: "info",
-      });
-      setTimeout(() => setNotification({ message: "", type: "" }), 3000);
-    }
-  };
 
   const handleCommentSubmit = (e) => {
     e.preventDefault();
@@ -234,10 +222,6 @@ const ViewPost = () => {
     setTimeout(() => setNotification({ message: "", type: "" }), 3000);
   };
 
-  const handleWritePost = () => {
-    navigate("/create");
-  };
-
   const handleEditPost = () => {
     navigate(`/edit/${id}`);
   };
@@ -263,35 +247,6 @@ const ViewPost = () => {
           {notification.message}
         </div>
       )}
-
-      {/* Header */}
-      <header className="view-post-header">
-        <div className="view-post-nav-container">
-          <Link to="/" className="view-post-logo">
-            BlogHub
-          </Link>
-          <nav className="view-post-nav-links">
-            <Link to="/" className="view-post-nav-link">
-              Home
-            </Link>
-            <button
-              className="view-post-write-button"
-              onClick={handleWritePost}
-            >
-              Write Post
-            </button>
-          </nav>
-          <form className="view-post-search-bar" onSubmit={handleSearch}>
-            <i className="fas fa-search"></i>
-            <input
-              type="text"
-              placeholder="Search posts..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </form>
-        </div>
-      </header>
 
       <div className="view-post-container">
         <main>
