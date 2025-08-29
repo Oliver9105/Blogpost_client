@@ -111,7 +111,7 @@ const ViewPost = () => {
     const requestBody = {
       content: newComment,
       author_id: 1,
-      post_id: parseInt(id),
+      post_id: 1,
     };
 
     fetch(`${API_BASE_URL}/comments`, {

@@ -26,8 +26,8 @@ const SignIn = ({ onLogin }) => {
     setError("");
 
     try {
-      // Try with direct API call first
-      const API_BASE = "https://blogpost-app-br7f.onrender.com";
+      // Fixed API URL - removed duplicate "http:" prefix
+      const API_BASE = "http://localhost:5555";
       let response = await fetch(`${API_BASE}/auth/login`, {
         method: "POST",
         headers: {
@@ -40,17 +40,14 @@ const SignIn = ({ onLogin }) => {
       if (!response.ok && response.status === 0) {
         console.warn("CORS issue detected, trying with proxy...");
         // Try with a CORS proxy as fallback
-        response = await fetch(
-          `https://blogpost-app-br7f.onrender.com/auth/login`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "X-Requested-With": "XMLHttpRequest",
-            },
-            body: JSON.stringify(credentials),
-          }
-        );
+        response = await fetch(`${API_BASE}/auth/login`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Requested-With": "XMLHttpRequest",
+          },
+          body: JSON.stringify(credentials),
+        });
       }
 
       if (response.ok) {

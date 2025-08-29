@@ -40,16 +40,13 @@ const CreatePost = () => {
     };
 
     try {
-      const response = await fetch(
-        "https://blogpost-app-br7f.onrender.com/posts",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(postData),
-        }
-      );
+      const response = await fetch("http://localhost:5555/posts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(postData),
+      });
 
       if (!response.ok) {
         throw new Error(`Server error: ${response.status}`);
