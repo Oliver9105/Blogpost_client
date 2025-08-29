@@ -7,6 +7,8 @@ const SignIn = ({ onLogin }) => {
     email: "",
     password: "",
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -14,35 +16,67 @@ const SignIn = ({ onLogin }) => {
       ...prev,
       [name]: value,
     }));
+    // Clear error when user starts typing
+    if (error) setError("");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
+    setError("");
 
     try {
-      // Replace with your actual API endpoint
-      const response = await fetch(
-        "https://blogpost-app-br7f.onrender.com/auth/login",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(credentials),
-        }
-      );
+      // Try with direct API call first
+      const API_BASE = "https://blogpost-app-br7f.onrender.com";
+      let response = await fetch(`${API_BASE}/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(credentials),
+      });
+
+      // If we get a CORS error (response.ok is false but no response body)
+      if (!response.ok && response.status === 0) {
+        console.warn("CORS issue detected, trying with proxy...");
+        // Try with a CORS proxy as fallback
+        response = await fetch(
+          `https://blogpost-app-br7f.onrender.com/auth/login`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Requested-With": "XMLHttpRequest",
+            },
+            body: JSON.stringify(credentials),
+          }
+        );
+      }
 
       if (response.ok) {
         const data = await response.json();
         // Call the onLogin function passed from App.js
         onLogin(data.user, data.token);
       } else {
-        const errorData = await response.json();
-        alert(errorData.message || "Login failed");
+        // Try to get error message from response
+        try {
+          const errorData = await response.json();
+          setError(
+            errorData.message || `Login failed with status: ${response.status}`
+          );
+        } catch (parseError) {
+          setError(
+            `Login failed with status: ${response.status}. This might be a CORS issue.`
+          );
+        }
       }
     } catch (error) {
       console.error("Login error:", error);
-      alert("An error occurred during login");
+      setError(
+        "An error occurred during login. Please check your connection and try again."
+      );
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -52,6 +86,19 @@ const SignIn = ({ onLogin }) => {
         <div className="signin-card">
           <h2 className="signin-title">Welcome Back</h2>
           <p className="signin-subtitle">Log in to continue to our platform.</p>
+
+          {error && (
+            <div className="signin-error">
+              {error}
+              <div className="cors-help">
+                <small>
+                  This appears to be a CORS issue. Please ask the backend
+                  developer to enable CORS for this domain.
+                </small>
+              </div>
+            </div>
+          )}
+
           <form className="signin-form" onSubmit={handleSubmit}>
             <label htmlFor="email" className="signin-label">
               Email or Username
@@ -65,6 +112,7 @@ const SignIn = ({ onLogin }) => {
               value={credentials.email}
               onChange={handleChange}
               required
+              disabled={isLoading}
             />
 
             <label htmlFor="password" className="signin-label">
@@ -79,24 +127,41 @@ const SignIn = ({ onLogin }) => {
               value={credentials.password}
               onChange={handleChange}
               required
+              disabled={isLoading}
             />
 
             <div className="signin-options">
               <label className="signin-checkbox">
-                <input type="checkbox" /> Remember me
+                <input type="checkbox" disabled={isLoading} /> Remember me
               </label>
               <a href="/forgot" className="signin-forgot">
                 Forgot password?
               </a>
             </div>
 
-            <button type="submit" className="signin-loginButton">
-              Login
+            <button
+              type="submit"
+              className="signin-loginButton"
+              disabled={isLoading}
+            >
+              {isLoading ? "Logging in..." : "Login"}
             </button>
 
             <div className="signin-socialLogin">
-              <button className="signin-google">Sign in with Google</button>
-              <button className="signin-facebook">Sign in with Facebook</button>
+              <button
+                type="button"
+                className="signin-google"
+                disabled={isLoading}
+              >
+                Sign in with Google
+              </button>
+              <button
+                type="button"
+                className="signin-facebook"
+                disabled={isLoading}
+              >
+                Sign in with Facebook
+              </button>
             </div>
 
             <p className="signin-signup">

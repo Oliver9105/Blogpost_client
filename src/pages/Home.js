@@ -16,7 +16,9 @@ const Home = () => {
     const fetchPosts = async () => {
       try {
         setLoading(true);
-        const response = await fetch("http://localhost:5555/posts");
+        const response = await fetch(
+          "https://blogpost-app-br7f.onrender.com/posts"
+        );
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -32,7 +34,9 @@ const Home = () => {
 
     const fetchCategories = async () => {
       try {
-        const response = await fetch("http://localhost:5555/categories");
+        const response = await fetch(
+          "https://blogpost-app-br7f.onrender.com/categories"
+        );
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -102,9 +106,6 @@ const Home = () => {
         <h1>Welcome to BlogHub</h1>
         <p>Your space to share stories, insights, and ideas.</p>
         <div className="home-hero-buttons">
-          <Link to="/" className="home-hero-button secondary">
-            Explore Posts
-          </Link>
           <Link to="/create" className="home-hero-button primary">
             Write New Post
           </Link>

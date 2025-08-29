@@ -7,6 +7,7 @@ import ViewPost from "./pages/ViewPost";
 import EditPost from "./pages/EditPost";
 import SignIn from "./pages/SignIn";
 import Navigation from "./components/Navigation";
+import SettingsPage from "./pages/SettingsPage";
 import "./App.css";
 
 function App() {
@@ -79,6 +80,14 @@ function App() {
           path="/signin"
           element={
             isAuthenticated ? <Navigate to="/" /> : <SignIn onLogin={login} />
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <SettingsPage user={user} onLogout={logout} />
+            </ProtectedRoute>
           }
         />
       </Routes>

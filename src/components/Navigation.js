@@ -60,11 +60,14 @@ const Navigation = ({ isAuthenticated, user, onLogout }) => {
             </div>
           ) : (
             <div className="auth-buttons">
-              <Link to="/signin" className="auth-button">
+              <Link to="/SignIn" className="auth-button">
                 Login
               </Link>
               <Link to="/register" className="auth-button primary">
                 Sign Up
+              </Link>
+              <Link to="/settings" className="nav-link">
+                <i className="fas fa-cog"></i> Settings
               </Link>
             </div>
           )}
