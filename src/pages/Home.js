@@ -16,9 +16,7 @@ const Home = () => {
     const fetchPosts = async () => {
       try {
         setLoading(true);
-        const response = await fetch(
-          "https://blogpost-app-br7f.onrender.com/posts"
-        );
+        const response = await fetch("http://localhost:5555/posts");
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -34,9 +32,7 @@ const Home = () => {
 
     const fetchCategories = async () => {
       try {
-        const response = await fetch(
-          "https://blogpost-app-br7f.onrender.com/categories"
-        );
+        const response = await fetch("http://localhost:5555/categories");
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
