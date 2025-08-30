@@ -4,7 +4,7 @@ import "../SignIn.css";
 
 const SignIn = ({ onLogin }) => {
   const [credentials, setCredentials] = useState({
-    email: "",
+    identifier: "", // Changed from email to identifier (works for both email/username)
     password: "",
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -26,8 +26,9 @@ const SignIn = ({ onLogin }) => {
     setError("");
 
     try {
-      // Fixed API URL - removed duplicate "http:" prefix
       const API_BASE = "http://localhost:5555";
+
+      // First attempt
       let response = await fetch(`${API_BASE}/auth/login`, {
         method: "POST",
         headers: {
@@ -36,11 +37,12 @@ const SignIn = ({ onLogin }) => {
         body: JSON.stringify(credentials),
       });
 
-      // If we get a CORS error (response.ok is false but no response body)
+      // If we get a CORS error, try with different headers
       if (!response.ok && response.status === 0) {
-        console.warn("CORS issue detected, trying with proxy...");
-        // Try with a CORS proxy as fallback
-        response = await fetch(`${API_BASE}/auth/login`, {
+        console.warn("CORS issue detected, trying with different headers...");
+
+        // Create a new response variable instead of reassigning
+        const retryResponse = await fetch(`${API_BASE}/auth/login`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -48,24 +50,29 @@ const SignIn = ({ onLogin }) => {
           },
           body: JSON.stringify(credentials),
         });
+
+        // Use the retry response instead
+        response = retryResponse;
+      }
+
+      const responseText = await response.text();
+      let data;
+
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error("Failed to parse response:", responseText);
+        setError(
+          `Server returned invalid JSON: ${responseText.substring(0, 100)}...`
+        );
+        return;
       }
 
       if (response.ok) {
-        const data = await response.json();
         // Call the onLogin function passed from App.js
         onLogin(data.user, data.token);
       } else {
-        // Try to get error message from response
-        try {
-          const errorData = await response.json();
-          setError(
-            errorData.message || `Login failed with status: ${response.status}`
-          );
-        } catch (parseError) {
-          setError(
-            `Login failed with status: ${response.status}. This might be a CORS issue.`
-          );
-        }
+        setError(data.error || `Login failed with status: ${response.status}`);
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -97,16 +104,16 @@ const SignIn = ({ onLogin }) => {
           )}
 
           <form className="signin-form" onSubmit={handleSubmit}>
-            <label htmlFor="email" className="signin-label">
+            <label htmlFor="identifier" className="signin-label">
               Email or Username
             </label>
             <input
               type="text"
-              id="email"
-              name="email"
+              id="identifier"
+              name="identifier"
               className="signin-input"
-              placeholder="Email or Username"
-              value={credentials.email}
+              placeholder="Enter your email or username"
+              value={credentials.identifier}
               onChange={handleChange}
               required
               disabled={isLoading}
@@ -120,7 +127,7 @@ const SignIn = ({ onLogin }) => {
               id="password"
               name="password"
               className="signin-input"
-              placeholder="Password"
+              placeholder="Enter your password"
               value={credentials.password}
               onChange={handleChange}
               required
@@ -131,9 +138,9 @@ const SignIn = ({ onLogin }) => {
               <label className="signin-checkbox">
                 <input type="checkbox" disabled={isLoading} /> Remember me
               </label>
-              <a href="/forgot" className="signin-forgot">
+              <Link to="/forgot-password" className="signin-forgot">
                 Forgot password?
-              </a>
+              </Link>
             </div>
 
             <button
@@ -141,8 +148,19 @@ const SignIn = ({ onLogin }) => {
               className="signin-loginButton"
               disabled={isLoading}
             >
-              {isLoading ? "Logging in..." : "Login"}
+              {isLoading ? (
+                <>
+                  <span className="signin-spinner"></span>
+                  Logging in...
+                </>
+              ) : (
+                "Login"
+              )}
             </button>
+
+            <div className="signin-divider">
+              <span>or continue with</span>
+            </div>
 
             <div className="signin-socialLogin">
               <button
@@ -150,6 +168,7 @@ const SignIn = ({ onLogin }) => {
                 className="signin-google"
                 disabled={isLoading}
               >
+                <span className="signin-socialIcon">G</span>
                 Sign in with Google
               </button>
               <button
@@ -157,12 +176,16 @@ const SignIn = ({ onLogin }) => {
                 className="signin-facebook"
                 disabled={isLoading}
               >
+                <span className="signin-socialIcon">f</span>
                 Sign in with Facebook
               </button>
             </div>
 
             <p className="signin-signup">
-              Don't have an account? <Link to="/register">Create account</Link>
+              Don't have an account?{" "}
+              <Link to="/register" className="signin-signupLink">
+                Create account
+              </Link>
             </p>
           </form>
         </div>
@@ -174,10 +197,13 @@ const SignIn = ({ onLogin }) => {
             <h4>Navigation</h4>
             <ul>
               <li>
-                <a href="/about">About Us</a>
+                <Link to="/about">About Us</Link>
               </li>
               <li>
-                <a href="/create">Create Post</a>
+                <Link to="/create">Create Post</Link>
+              </li>
+              <li>
+                <Link to="/">Home</Link>
               </li>
             </ul>
           </div>
@@ -185,13 +211,13 @@ const SignIn = ({ onLogin }) => {
             <h4>Account</h4>
             <ul>
               <li>
-                <a href="/signin">Login</a>
+                <Link to="/signin">Login</Link>
               </li>
               <li>
-                <a href="/reset">Forgot Password</a>
+                <Link to="/forgot-password">Forgot Password</Link>
               </li>
               <li>
-                <a href="/settings">Profile Settings</a>
+                <Link to="/settings">Profile Settings</Link>
               </li>
             </ul>
           </div>
@@ -199,10 +225,10 @@ const SignIn = ({ onLogin }) => {
             <h4>Legal</h4>
             <ul>
               <li>
-                <a href="/privacy">Privacy Policy</a>
+                <Link to="/privacy">Privacy Policy</Link>
               </li>
               <li>
-                <a href="/terms">Terms of Service</a>
+                <Link to="/terms">Terms of Service</Link>
               </li>
               <li>
                 <a href="mailto:support@bloghub.com">Contact</a>
