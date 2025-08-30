@@ -1,9 +1,10 @@
-// components/Navigation.js
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import "../Navigation.css";
 
 const Navigation = ({ isAuthenticated, user, onLogout }) => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -15,33 +16,16 @@ const Navigation = ({ isAuthenticated, user, onLogout }) => {
       alert("You must log in to create a post");
       return;
     }
-    // Navigation will be handled by the Link component
   };
 
   return (
-    <header className="view-post-header">
-      <div className="view-post-nav-container">
-        <Link to="/" className="view-post-logo">
+    <header className="navigation-header">
+      <div className="nav-container">
+        <Link to="/" className="logo">
           BlogHub
         </Link>
-        <nav className="view-post-nav-links">
-          <Link to="/" className="view-post-nav-link">
-            Home
-          </Link>
-          {isAuthenticated ? (
-            <Link to="/create" className="view-post-write-button">
-              Write Post
-            </Link>
-          ) : (
-            <button
-              className="view-post-write-button"
-              onClick={handleWritePost}
-            >
-              Write Post
-            </button>
-          )}
-        </nav>
-        <form className="view-post-search-bar" onSubmit={handleSearch}>
+
+        <form className="search-bar" onSubmit={handleSearch}>
           <i className="fas fa-search"></i>
           <input
             type="text"
@@ -50,24 +34,79 @@ const Navigation = ({ isAuthenticated, user, onLogout }) => {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </form>
+
+        <nav className="nav-links">
+          <Link to="/" className="nav-link">
+            Home
+          </Link>
+          {isAuthenticated ? (
+            <Link to="/create" className="write-button">
+              <i className="fas fa-plus"></i> Write Post
+            </Link>
+          ) : (
+            <button className="write-button" onClick={handleWritePost}>
+              <i className="fas fa-plus"></i> Write Post
+            </button>
+          )}
+        </nav>
+
         <div className="auth-section">
           {isAuthenticated ? (
-            <div className="user-menu">
-              <span>Welcome, {user?.username}</span>
-              <button onClick={onLogout} className="logout-btn">
-                Logout
-              </button>
+            <div className="user-menu-container">
+              <div
+                className="user-trigger"
+                onClick={() => setShowUserMenu(!showUserMenu)}
+              >
+                <div className="user-avatar-container">
+                  {user?.avatar ? (
+                    <img
+                      src={user.avatar}
+                      alt={user?.username}
+                      className="user-avatar"
+                    />
+                  ) : (
+                    <div className="user-avatar-placeholder">
+                      {user?.username?.charAt(0)?.toUpperCase() || "U"}
+                    </div>
+                  )}
+                </div>
+                <div className="user-info">
+                  <span className="user-name">{user?.username}</span>
+                  <span className="user-email">{user?.email}</span>
+                </div>
+                <i
+                  className={`fas fa-chevron-${showUserMenu ? "up" : "down"}`}
+                ></i>
+              </div>
+
+              {showUserMenu && (
+                <div className="user-dropdown">
+                  <Link to="/profile" className="dropdown-item">
+                    <i className="fas fa-user"></i> My Profile
+                  </Link>
+                  <Link to="/settings" className="dropdown-item">
+                    <i className="fas fa-cog"></i> Settings
+                  </Link>
+                  <Link to="/my-posts" className="dropdown-item">
+                    <i className="fas fa-file-alt"></i> My Posts
+                  </Link>
+                  <hr className="dropdown-divider" />
+                  <button
+                    onClick={onLogout}
+                    className="dropdown-item logout-item"
+                  >
+                    <i className="fas fa-sign-out-alt"></i> Logout
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <div className="auth-buttons">
-              <Link to="/SignIn" className="auth-button">
+              <Link to="/signin" className="auth-button">
                 Login
               </Link>
               <Link to="/register" className="auth-button primary">
                 Sign Up
-              </Link>
-              <Link to="/settings" className="nav-link">
-                <i className="fas fa-cog"></i> Settings
               </Link>
             </div>
           )}
