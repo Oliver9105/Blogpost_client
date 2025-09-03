@@ -33,7 +33,9 @@ const CreatePost = () => {
   const fetchTags = async () => {
     setIsLoadingTags(true);
     try {
-      const response = await fetch("http://localhost:5555/tags");
+      const response = await fetch(
+        "https://blogpost-app-3gtr.onrender.com/tags"
+      );
       if (response.ok) {
         const tags = await response.json();
         setAvailableTags(tags);
@@ -111,16 +113,19 @@ const CreatePost = () => {
     if (!newTagName.trim()) return;
 
     try {
-      const response = await fetch("http://localhost:5555/tags", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: newTagName.trim(),
-          category_id: getCategoryId(category) || 1,
-        }),
-      });
+      const response = await fetch(
+        "https://blogpost-app-3gtr.onrender.com/tags",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: newTagName.trim(),
+            category_id: getCategoryId(category) || 1,
+          }),
+        }
+      );
 
       if (response.ok) {
         const newTag = await response.json();
@@ -185,13 +190,16 @@ const CreatePost = () => {
         tag_ids: selectedTags,
       };
 
-      const response = await fetch("http://localhost:5555/posts", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(postData),
-      });
+      const response = await fetch(
+        "https://blogpost-app-3gtr.onrender.com/posts",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(postData),
+        }
+      );
 
       if (!response.ok) {
         const errorText = await response.text();
