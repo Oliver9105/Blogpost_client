@@ -50,6 +50,7 @@ const CreatePost = () => {
   const handleAddNewTag = async () => {
     if (!newTagName.trim()) return;
     const selectedCategory = categories.find((c) => c.name === category);
+
     try {
       const res = await fetch("https://blogpost-app-3gtr.onrender.com/tags", {
         method: "POST",
@@ -59,12 +60,34 @@ const CreatePost = () => {
           category_id: selectedCategory?.id || 1,
         }),
       });
+
+      if (!res.ok) {
+        if (res.status === 409) {
+          // Tag already exists, find it and add to selected tags
+          const existingTagsRes = await fetch(
+            "https://blogpost-app-3gtr.onrender.com/tags"
+          );
+          const allTags = await existingTagsRes.json();
+          const existingTag = allTags.find(
+            (t) => t.name.toLowerCase() === newTagName.trim().toLowerCase()
+          );
+
+          if (existingTag) {
+            setSelectedTags((prev) => [...prev, existingTag.id]);
+            setNewTagName("");
+            return;
+          }
+        }
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to create tag");
+      }
+
       const newTag = await res.json();
       setTags((prev) => [...prev, newTag]);
       setSelectedTags((prev) => [...prev, newTag.id]);
       setNewTagName("");
-    } catch {
-      setError("Failed to create tag.");
+    } catch (err) {
+      setError(err.message || "Failed to create tag. It may already exist.");
     }
   };
 
@@ -163,22 +186,30 @@ const CreatePost = () => {
         tag_ids: selectedTags,
       };
 
+      console.log("Sending post data:", postData);
+
       const res = await fetch("https://blogpost-app-3gtr.onrender.com/posts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(postData),
       });
 
+      const responseData = await res.json();
+
       if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(errorText || "Failed to publish post.");
+        console.error("Server response:", responseData);
+        throw new Error(responseData.error || `Server error: ${res.status}`);
       }
 
-      const result = await res.json();
+      const result = responseData;
       alert("Post published successfully!");
       navigate(`/posts/${result.id}`);
     } catch (err) {
-      setError(err.message || "Failed to publish post.");
+      console.error("Error details:", err);
+      setError(
+        err.message ||
+          "Failed to publish post. Please check your data and try again."
+      );
     } finally {
       setIsLoading(false);
     }
