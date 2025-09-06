@@ -27,6 +27,7 @@ const Home = () => {
         const data = await response.json();
         setPosts(Array.isArray(data) ? data : []);
       } catch (err) {
+        console.error("Error fetching posts:", err);
       } finally {
         setLoading(false);
       }
@@ -184,15 +185,27 @@ const Home = () => {
                 <div className="home-post-image">
                   {post.featured_image ? (
                     <img
-                      src={post.featured_image}
+                      src={
+                        post.featured_image.startsWith("http")
+                          ? post.featured_image
+                          : `https://blogpost-app-3gtr.onrender.com${post.featured_image}`
+                      }
                       alt={post.title}
                       className="home-post-thumbnail-img"
+                      onError={(e) => {
+                        // Hide the image and show the fallback if it fails to load
+                        e.target.style.display = "none";
+                        const fallback = e.target.nextElementSibling;
+                        if (fallback) fallback.style.display = "flex";
+                      }}
                     />
-                  ) : (
-                    <span className="home-post-thumbnail">
-                      {post.title?.charAt(0)}
-                    </span>
-                  )}
+                  ) : null}
+                  <span
+                    className="home-post-thumbnail"
+                    style={{ display: post.featured_image ? "none" : "flex" }}
+                  >
+                    {post.title?.charAt(0)}
+                  </span>
                 </div>
 
                 <div className="home-post-content">
