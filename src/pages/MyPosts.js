@@ -21,7 +21,7 @@ const MyPosts = ({ isAuthenticated, user }) => {
         }
 
         const response = await fetch(
-          `http://localhost:5555/posts/my-posts?user_id=${user.id}`
+          `https://blogpost-app-3gtr.onrender.com/posts/my-posts?user_id=${user.id}`
         );
         if (!response.ok) {
           throw new Error("Failed to fetch posts");
@@ -47,12 +47,15 @@ const MyPosts = ({ isAuthenticated, user }) => {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`http://localhost:5555/posts/${postId}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        `https://blogpost-app-3gtr.onrender.com/posts/${postId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to delete post");
