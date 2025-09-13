@@ -8,13 +8,13 @@ import EditPost from "./pages/EditPost";
 import SignIn from "./pages/SignIn";
 import Navigation from "./components/Navigation";
 import SettingsPage from "./pages/SettingsPage";
+import MyPosts from "./pages/MyPosts";
 import "./App.css";
 
 function App() {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Check if user is logged in on app load
   useEffect(() => {
     const token = localStorage.getItem("token");
     const userData = localStorage.getItem("user");
@@ -39,7 +39,6 @@ function App() {
     localStorage.removeItem("user");
   };
 
-  // Protected Route component
   const ProtectedRoute = ({ children }) => {
     return isAuthenticated ? children : <Navigate to="/signin" />;
   };
@@ -60,6 +59,12 @@ function App() {
           }
         />
         <Route
+          path="/signin"
+          element={
+            isAuthenticated ? <Navigate to="/" /> : <SignIn onLogin={login} />
+          }
+        />
+        <Route
           path="/create"
           element={
             <ProtectedRoute>
@@ -77,12 +82,6 @@ function App() {
           }
         />
         <Route
-          path="/signin"
-          element={
-            isAuthenticated ? <Navigate to="/" /> : <SignIn onLogin={login} />
-          }
-        />
-        <Route
           path="/settings"
           element={
             <ProtectedRoute>
@@ -90,6 +89,15 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/my-posts"
+          element={
+            <ProtectedRoute>
+              <MyPosts isAuthenticated={isAuthenticated} user={user} />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </div>
   );
