@@ -120,9 +120,14 @@ const MyPosts = ({ isAuthenticated, user }) => {
         <div className="posts-list">
           {posts.map((post) => (
             <div key={post.id} className="post-card">
-              {post.image && (
-                <img src={post.image} alt={post.title} className="post-image" />
+              {post.featured_image && (
+                <img
+                  src={`https://blogpost-app-3gtr.onrender.com${post.featured_image}`}
+                  alt={post.title}
+                  className="post-image"
+                />
               )}
+
               <div className="post-content">
                 <h2 className="post-title">{post.title}</h2>
                 <p className="post-excerpt">
