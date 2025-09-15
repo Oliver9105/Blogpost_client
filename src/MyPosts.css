@@ -33,6 +33,33 @@
   background-color: #45a049;
 }
 
+/* === Filter Tabs === */
+.filter-tabs {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.filter-tabs button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  background-color: #e5e7eb;
+  color: #333;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.3s;
+}
+
+.filter-tabs button.active {
+  background-color: #4caf50;
+  color: white;
+}
+
+.filter-tabs button:hover:not(.active) {
+  background-color: #d1d5db;
+}
+
 .auth-required,
 .loading,
 .error,

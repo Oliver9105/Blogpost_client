@@ -16,9 +16,7 @@ const Home = () => {
     const fetchPosts = async () => {
       try {
         setLoading(true);
-        const response = await fetch(
-          "https://blogpost-app-3gtr.onrender.com/posts"
-        );
+        const response = await fetch("http://localhost:5555/posts");
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -35,9 +33,7 @@ const Home = () => {
 
     const fetchCategories = async () => {
       try {
-        const response = await fetch(
-          "https://blogpost-app-3gtr.onrender.com/categories"
-        );
+        const response = await fetch("http://localhost:5555/categories");
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -188,7 +184,7 @@ const Home = () => {
                       src={
                         post.featured_image.startsWith("http")
                           ? post.featured_image
-                          : `https://blogpost-app-3gtr.onrender.com${post.featured_image}`
+                          : `http://localhost:5555${post.featured_image}`
                       }
                       alt={post.title}
                       className="home-post-thumbnail-img"

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "../EditPost.css";
 
-const API_BASE = "https://blogpost-app-3gtr.onrender.com";
+const API_BASE = "http://localhost:5555";
 
 const EditPost = () => {
   const { id } = useParams();

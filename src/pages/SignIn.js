@@ -26,7 +26,7 @@ const SignIn = ({ onLogin }) => {
     setError("");
 
     try {
-      const API_BASE = "https://blogpost-app-3gtr.onrender.com";
+      const API_BASE = "http://localhost:5555";
 
       // First attempt
       let response = await fetch(`${API_BASE}/auth/login`, {

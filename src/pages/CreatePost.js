@@ -22,7 +22,7 @@ const CreatePost = () => {
   const currentUser = JSON.parse(localStorage.getItem("user"));
 
   useEffect(() => {
-    fetch("https://blogpost-app-3gtr.onrender.com/categories")
+    fetch("http://localhost:5555/categories")
       .then((res) => res.json())
       .then((data) => setCategories(data))
       .catch(() => setCategories([]));
@@ -30,7 +30,7 @@ const CreatePost = () => {
 
   useEffect(() => {
     setIsLoadingTags(true);
-    fetch("https://blogpost-app-3gtr.onrender.com/tags")
+    fetch("http://localhost:5555/tags")
       .then((res) => res.json())
       .then((data) => {
         setTags(data);
@@ -52,7 +52,7 @@ const CreatePost = () => {
     const selectedCategory = categories.find((c) => c.name === category);
 
     try {
-      const res = await fetch("https://blogpost-app-3gtr.onrender.com/tags", {
+      const res = await fetch("http://localhost:5555/tags", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -64,9 +64,7 @@ const CreatePost = () => {
       if (!res.ok) {
         if (res.status === 409) {
           // Tag already exists, find it and add to selected tags
-          const existingTagsRes = await fetch(
-            "https://blogpost-app-3gtr.onrender.com/tags"
-          );
+          const existingTagsRes = await fetch("http://localhost:5555/tags");
           const allTags = await existingTagsRes.json();
           const existingTag = allTags.find(
             (t) => t.name.toLowerCase() === newTagName.trim().toLowerCase()
@@ -142,13 +140,10 @@ const CreatePost = () => {
     formData.append("image", file);
 
     try {
-      const response = await fetch(
-        "https://blogpost-app-3gtr.onrender.com/api/upload",
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+      const response = await fetch("http://localhost:5555/api/upload", {
+        method: "POST",
+        body: formData,
+      });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -188,7 +183,7 @@ const CreatePost = () => {
 
       console.log("Sending post data:", postData);
 
-      const res = await fetch("https://blogpost-app-3gtr.onrender.com/posts", {
+      const res = await fetch("http://localhost:5555/posts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(postData),
