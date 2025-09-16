@@ -60,6 +60,7 @@
   background-color: #d1d5db;
 }
 
+/* === Messages === */
 .auth-required,
 .loading,
 .error,
@@ -93,6 +94,7 @@
   background-color: #45a049;
 }
 
+/* === Posts Grid === */
 .posts-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
@@ -105,6 +107,7 @@
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s, box-shadow 0.3s;
+  cursor: pointer;
 }
 
 .post-card:hover {
@@ -130,10 +133,26 @@
 
 .post-excerpt {
   color: #666;
-  margin-bottom: 15px;
+  margin-bottom: 10px;
   line-height: 1.5;
 }
 
+/* === Tags === */
+.post-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.post-tags span {
+  color: #3b82f6;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+}
+
+/* === Post Meta === */
 .post-meta {
   display: flex;
   justify-content: space-between;
@@ -165,6 +184,7 @@
   color: #d97706;
 }
 
+/* === Actions === */
 .post-actions {
   display: flex;
   gap: 12px;
@@ -203,6 +223,7 @@
   background: #fecaca;
 }
 
+/* === Responsive === */
 @media (max-width: 768px) {
   .my-posts-header {
     flex-direction: column;

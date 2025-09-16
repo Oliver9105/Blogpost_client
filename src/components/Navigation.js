@@ -81,9 +81,6 @@ const Navigation = ({ isAuthenticated, user, onLogout }) => {
 
               {showUserMenu && (
                 <div className="user-dropdown">
-                  <Link to="/profile" className="dropdown-item">
-                    <i className="fas fa-user"></i> My Profile
-                  </Link>
                   <Link to="/settings" className="dropdown-item">
                     <i className="fas fa-cog"></i> Settings
                   </Link>

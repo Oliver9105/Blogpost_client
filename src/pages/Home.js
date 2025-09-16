@@ -1,29 +1,42 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "../Home.css";
 
 const Home = () => {
   const [posts, setPosts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [tags, setTags] = useState([]);
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("latest");
-  const [visibleCount, setVisibleCount] = useState(6);
+  const initialVisibleCount = 3;
+  const [visibleCount, setVisibleCount] = useState(initialVisibleCount);
   const [loading, setLoading] = useState(true);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [tagsLoading, setTagsLoading] = useState(true);
 
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedTags, setSelectedTags] = useState([]);
+  const [showFilters, setShowFilters] = useState(false);
+  const [user, setUser] = useState(null);
+
+  const navigate = useNavigate();
+
+  // Fetch user
+  useEffect(() => {
+    const userData = localStorage.getItem("user");
+    if (userData) setUser(JSON.parse(userData));
+  }, []);
+
+  // Fetch posts + categories + tags
   useEffect(() => {
     const fetchPosts = async () => {
       try {
         setLoading(true);
         const response = await fetch("http://localhost:5555/posts");
-
-        if (!response.ok) {
+        if (!response.ok)
           throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
         const data = await response.json();
-        setPosts(Array.isArray(data) ? data : []);
+        setPosts(data.filter((post) => post.published));
       } catch (err) {
         console.error("Error fetching posts:", err);
       } finally {
@@ -33,14 +46,12 @@ const Home = () => {
 
     const fetchCategories = async () => {
       try {
+        setCategoriesLoading(true);
         const response = await fetch("http://localhost:5555/categories");
-
-        if (!response.ok) {
+        if (!response.ok)
           throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
         const data = await response.json();
-        setCategories(Array.isArray(data) ? data : []);
+        setCategories(data);
       } catch (err) {
         console.error("Error fetching categories:", err);
       } finally {
@@ -48,32 +59,62 @@ const Home = () => {
       }
     };
 
+    const fetchTags = async () => {
+      try {
+        setTagsLoading(true);
+        const response = await fetch("http://localhost:5555/tags");
+        if (!response.ok)
+          throw new Error(`HTTP error! status: ${response.status}`);
+        const data = await response.json();
+        setTags(data);
+      } catch (err) {
+        console.error("Error fetching tags:", err);
+      } finally {
+        setTagsLoading(false);
+      }
+    };
+
     fetchPosts();
     fetchCategories();
+    fetchTags();
   }, []);
 
   const handleCategoryClick = (categoryId) => {
-    if (selectedCategory === categoryId) {
-      setSelectedCategory(null); // Clear filter if same category is clicked again
+    setSelectedCategory(selectedCategory === categoryId ? null : categoryId);
+    setVisibleCount(initialVisibleCount);
+  };
+
+  const handleTagClick = (tagId) => {
+    if (selectedTags.includes(tagId)) {
+      setSelectedTags(selectedTags.filter((id) => id !== tagId));
     } else {
-      setSelectedCategory(categoryId);
+      setSelectedTags([...selectedTags, tagId]);
     }
-    setVisibleCount(6); // Reset visible count when changing category
+    setVisibleCount(initialVisibleCount);
+  };
+
+  const clearAllFilters = () => {
+    setSelectedCategory(null);
+    setSelectedTags([]);
+    setSearch("");
+    setVisibleCount(initialVisibleCount);
   };
 
   const filteredPosts = posts
     .filter((post) => {
-      // Filter by search term
       const matchesSearch = post.title
         ?.toLowerCase()
         .includes(search.toLowerCase());
-
-      // Filter by selected category
       const matchesCategory = selectedCategory
         ? post.category?.id === selectedCategory
         : true;
-
-      return matchesSearch && matchesCategory;
+      const matchesTags =
+        selectedTags.length > 0
+          ? selectedTags.every((tagId) =>
+              post.tags?.some((tag) => tag.id === tagId)
+            )
+          : true;
+      return matchesSearch && matchesCategory && matchesTags;
     })
     .sort((a, b) =>
       sort === "latest"
@@ -81,9 +122,12 @@ const Home = () => {
         : new Date(a.created_at) - new Date(b.created_at)
     );
 
-  const visiblePosts = filteredPosts.slice(0, visibleCount);
+  const visiblePosts =
+    selectedCategory || selectedTags.length > 0
+      ? filteredPosts
+      : filteredPosts.slice(0, visibleCount);
 
-  // Calculate post counts for each category
+  // Category counts
   const categoryPostCounts = {};
   posts.forEach((post) => {
     if (post.category && post.category.id) {
@@ -92,92 +136,153 @@ const Home = () => {
     }
   });
 
+  // Tag counts
+  const tagPostCounts = {};
+  posts.forEach((post) => {
+    if (post.tags) {
+      post.tags.forEach((tag) => {
+        tagPostCounts[tag.id] = (tagPostCounts[tag.id] || 0) + 1;
+      });
+    }
+  });
+
   if (loading) {
-    return <div className="home-container">Loading posts...</div>;
+    return (
+      <div className="home-container">
+        <div className="home-hero">
+          <h1>Welcome to BlogHub</h1>
+          <p>Your space to share stories, insights, and ideas.</p>
+        </div>
+        <div className="loading-posts">⏳ Loading posts...</div>
+      </div>
+    );
   }
 
   return (
     <div className="home-container">
       {/* Hero */}
       <section className="home-hero">
-        <h1>Welcome to BlogHub</h1>
+        <h1>Welcome to BlogHub ✨</h1>
         <p>Your space to share stories, insights, and ideas.</p>
         <div className="home-hero-buttons">
-          <Link to="/create" className="home-hero-button primary">
-            Write New Post
-          </Link>
+          {user ? (
+            <Link to="/create" className="home-hero-button primary">
+              ✏️ Write New Post
+            </Link>
+          ) : (
+            <>
+              <Link to="/login" className="home-hero-button">
+                🔑 Login
+              </Link>
+              <Link to="/register" className="home-hero-button primary">
+                📝 Sign Up
+              </Link>
+            </>
+          )}
         </div>
       </section>
 
       {/* Toolbar */}
       <div className="home-toolbar">
-        <input
-          type="text"
-          className="home-search-input"
-          placeholder="Search posts..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+        <div className="search-container">
+          <input
+            type="text"
+            className="home-search-input"
+            placeholder="Search posts..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <button
+            className="filter-toggle"
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            {showFilters ? "Hide Filters ❌" : "Show Filters 🔍"}
+          </button>
+        </div>
+
         <select
           className="home-select"
           value={sort}
           onChange={(e) => setSort(e.target.value)}
         >
-          <option value="latest">Sort by: Latest</option>
-          <option value="oldest">Sort by: Oldest</option>
+          <option value="latest">Sort: Latest 🆕</option>
+          <option value="oldest">Sort: Oldest 📜</option>
+          <option value="popular">Sort: Most Comments 💬</option>
         </select>
       </div>
 
-      {/* Categories */}
-      <section className="home-categories">
-        <h2 className="home-section-title">Explore Popular Categories</h2>
-        {categoriesLoading ? (
-          <div className="categories-loading">Loading categories...</div>
-        ) : (
-          <div className="home-categories-grid">
-            {categories.map((category) => (
-              <button
-                key={category.id}
-                className={`home-category-card ${
-                  selectedCategory === category.id ? "active" : ""
-                }`}
-                onClick={() => handleCategoryClick(category.id)}
-              >
-                <div className="home-category-icon">📁</div>
-                <div className="home-category-label">{category.name}</div>
-                <div className="home-category-count">
-                  {categoryPostCounts[category.id] || 0} posts
-                </div>
-              </button>
-            ))}
+      {/* Filters */}
+      {showFilters && (
+        <div className="filters-panel">
+          <div className="filter-section">
+            <h3>Categories 📂</h3>
+            <div className="filter-tags">
+              {categoriesLoading ? (
+                <span>Loading categories...</span>
+              ) : (
+                categories.map((category) => (
+                  <button
+                    key={category.id}
+                    className={`filter-tag ${
+                      selectedCategory === category.id ? "active" : ""
+                    }`}
+                    onClick={() => handleCategoryClick(category.id)}
+                  >
+                    {category.name} ({categoryPostCounts[category.id] || 0})
+                  </button>
+                ))
+              )}
+            </div>
           </div>
-        )}
-      </section>
 
-      {/* Posts */}
-      <section className="home-posts-section">
-        <div className="posts-header">
-          <h2 className="home-section-title">
-            {selectedCategory
-              ? `Posts in ${
-                  categories.find((c) => c.id === selectedCategory)?.name ||
-                  "Category"
-                }`
-              : "Recent Posts"}
-          </h2>
-          {selectedCategory && (
-            <button
-              className="clear-filter-button"
-              onClick={() => setSelectedCategory(null)}
-            >
-              Clear Filter
+          <div className="filter-section">
+            <h3>Tags 🔖</h3>
+            <div className="filter-tags">
+              {tagsLoading ? (
+                <span>Loading tags...</span>
+              ) : (
+                tags.map((tag) => (
+                  <button
+                    key={tag.id}
+                    className={`filter-tag ${
+                      selectedTags.includes(tag.id) ? "active" : ""
+                    }`}
+                    onClick={() => handleTagClick(tag.id)}
+                  >
+                    #{tag.name} ({tagPostCounts[tag.id] || 0})
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+
+          {(selectedCategory || selectedTags.length > 0) && (
+            <button className="clear-filters" onClick={clearAllFilters}>
+              🧹 Clear All Filters
             </button>
           )}
         </div>
+      )}
+
+      {/* Posts */}
+      <section className="home-posts-section">
+        <h2 className="home-section-title">
+          {selectedCategory
+            ? `Posts in ${
+                categories.find((c) => c.id === selectedCategory)?.name ||
+                "Category"
+              }`
+            : "Recent Posts"}
+        </h2>
+
         <div className="home-posts-grid">
           {visiblePosts.length > 0 ? (
             visiblePosts.map((post) => (
-              <div key={post.id} className="home-post-card">
+              <div
+                key={post.id}
+                className="home-post-card"
+                onClick={() => navigate(`/posts/${post.id}`)}
+              >
                 <div className="home-post-image">
                   {post.featured_image ? (
                     <img
@@ -188,80 +293,64 @@ const Home = () => {
                       }
                       alt={post.title}
                       className="home-post-thumbnail-img"
-                      onError={(e) => {
-                        // Hide the image and show the fallback if it fails to load
-                        e.target.style.display = "none";
-                        const fallback = e.target.nextElementSibling;
-                        if (fallback) fallback.style.display = "flex";
-                      }}
+                      onError={(e) => (e.target.style.display = "none")}
                     />
-                  ) : null}
-                  <span
-                    className="home-post-thumbnail"
-                    style={{ display: post.featured_image ? "none" : "flex" }}
-                  >
-                    {post.title?.charAt(0)}
-                  </span>
+                  ) : (
+                    <span className="home-post-thumbnail">📝</span>
+                  )}
                 </div>
 
                 <div className="home-post-content">
                   {post.category?.name && (
                     <span className="home-post-category">
-                      {post.category.name}
+                      📂 {post.category.name}
                     </span>
                   )}
-
                   {post.tags?.length > 0 && (
                     <div className="home-post-tags">
-                      {post.tags.map((tag, index) => (
-                        <span key={index} className="home-post-tag">
+                      {post.tags.map((tag) => (
+                        <span key={tag.id} className="home-post-tag">
                           #{tag.name}
                         </span>
                       ))}
                     </div>
                   )}
-
-                  <h3 className="home-post-title">{post.title}</h3>
-                  <p className="home-post-excerpt">
-                    {post.content?.substring(0, 120)}...
-                  </p>
-
+                  <h3 className="home-post-title">✨ {post.title}</h3>
+                  <p className="home-post-excerpt">{post.excerpt}</p>
                   <div className="home-post-meta">
                     <span>
-                      By {post.author?.username || "Unknown"}
-                      {post.created_at && (
-                        <> • {new Date(post.created_at).toLocaleDateString()}</>
-                      )}
+                      👤 {post.owner?.username || "Unknown"} • 🗓{" "}
+                      {new Date(post.created_at).toLocaleDateString()}
                     </span>
+                    {post.comments && (
+                      <span className="comment-count">
+                        💬 {post.comments.length}
+                      </span>
+                    )}
                   </div>
-
-                  <Link to={`/posts/${post.id}`} className="home-post-link">
-                    Read More →
-                  </Link>
                 </div>
               </div>
             ))
           ) : (
             <p className="no-posts-message">
-              {selectedCategory
-                ? `No posts found in this category. ${
-                    search ? "Try a different search term." : ""
-                  }`
-                : `No posts found. ${
-                    search ? "Try a different search term." : ""
-                  }`}
+              No posts found for the current filters. 🔍
             </p>
           )}
         </div>
 
-        {visibleCount < filteredPosts.length && (
-          <button
-            className="home-load-more"
-            onClick={() => setVisibleCount((prev) => prev + 6)}
-          >
-            Load More Posts
-          </button>
-        )}
+        {/* Load More button */}
+        {!selectedCategory &&
+          selectedTags.length === 0 &&
+          visibleCount < filteredPosts.length && (
+            <button
+              className="home-load-more"
+              onClick={() =>
+                setVisibleCount((prev) => prev + initialVisibleCount)
+              }
+            >
+              Load More Posts ⬇️
+            </button>
+          )}
       </section>
 
       {/* Footer */}

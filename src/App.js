@@ -2,13 +2,13 @@ import React, { useState, useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import Home from "./pages/Home";
 import Register from "./pages/Register";
-import CreatePost from "./pages/CreatePost";
-import ViewPost from "./pages/ViewPost";
-import EditPost from "./pages/EditPost";
 import SignIn from "./pages/SignIn";
-import Navigation from "./components/Navigation";
-import SettingsPage from "./pages/SettingsPage";
+import CreatePost from "./pages/CreatePost";
+import EditPost from "./pages/EditPost";
+import ViewPost from "./pages/ViewPost";
 import MyPosts from "./pages/MyPosts";
+import SettingsPage from "./pages/SettingsPage";
+import Navigation from "./components/Navigation";
 import "./App.css";
 
 function App() {
@@ -50,8 +50,14 @@ function App() {
         user={user}
         onLogout={logout}
       />
+
       <Routes>
+        {/* Public Routes */}
         <Route path="/" element={<Home />} />
+        <Route
+          path="/posts/:id"
+          element={<ViewPost isAuthenticated={isAuthenticated} user={user} />}
+        />
         <Route
           path="/register"
           element={
@@ -64,6 +70,8 @@ function App() {
             isAuthenticated ? <Navigate to="/" /> : <SignIn onLogin={login} />
           }
         />
+
+        {/* Protected Routes */}
         <Route
           path="/create"
           element={
@@ -72,20 +80,11 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route path="/posts/:id" element={<ViewPost />} />
         <Route
           path="/edit/:id"
           element={
             <ProtectedRoute>
-              <EditPost />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/settings"
-          element={
-            <ProtectedRoute>
-              <SettingsPage user={user} onLogout={logout} />
+              <EditPost user={user} />
             </ProtectedRoute>
           }
         />
@@ -97,6 +96,16 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <SettingsPage user={user} onLogout={logout} />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Fallback */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </div>

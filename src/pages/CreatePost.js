@@ -4,7 +4,7 @@ import "../CreatePost.css";
 
 const CreatePost = () => {
   const [title, setTitle] = useState("");
-  const [category, setCategory] = useState("");
+  const [category, setCategory] = useState(null); // category ID
   const [categories, setCategories] = useState([]);
   const [tags, setTags] = useState([]);
   const [selectedTags, setSelectedTags] = useState([]);
@@ -21,6 +21,7 @@ const CreatePost = () => {
 
   const currentUser = JSON.parse(localStorage.getItem("user"));
 
+  // Fetch categories
   useEffect(() => {
     fetch("http://localhost:5555/categories")
       .then((res) => res.json())
@@ -28,6 +29,7 @@ const CreatePost = () => {
       .catch(() => setCategories([]));
   }, []);
 
+  // Fetch tags
   useEffect(() => {
     setIsLoadingTags(true);
     fetch("http://localhost:5555/tags")
@@ -39,17 +41,23 @@ const CreatePost = () => {
       .catch(() => setIsLoadingTags(false));
   }, []);
 
-  const handleTagToggle = (tagId) => {
-    setSelectedTags((prev) =>
-      prev.includes(tagId)
-        ? prev.filter((id) => id !== tagId)
-        : [...prev, tagId]
-    );
+  const handleCategoryChange = (e) => {
+    const val = Number(e.target.value);
+    setCategory(val);
+    setSelectedTags([]);
+    setNewTagName("");
   };
 
+  const selectedCategory = categories.find((c) => c.id === category);
+
+  // Filter tags dynamically based on selected category
+  const filteredTags = category
+    ? tags.filter((tag) => tag.category_id === category)
+    : [];
+
+  // Handle new tag creation
   const handleAddNewTag = async () => {
-    if (!newTagName.trim()) return;
-    const selectedCategory = categories.find((c) => c.name === category);
+    if (!newTagName.trim() || !category) return;
 
     try {
       const res = await fetch("http://localhost:5555/tags", {
@@ -57,46 +65,27 @@ const CreatePost = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: newTagName.trim(),
-          category_id: selectedCategory?.id || 1,
+          category_id: category,
         }),
       });
 
-      if (!res.ok) {
-        if (res.status === 409) {
-          // Tag already exists, find it and add to selected tags
-          const existingTagsRes = await fetch("http://localhost:5555/tags");
-          const allTags = await existingTagsRes.json();
-          const existingTag = allTags.find(
-            (t) => t.name.toLowerCase() === newTagName.trim().toLowerCase()
-          );
-
-          if (existingTag) {
-            setSelectedTags((prev) => [...prev, existingTag.id]);
-            setNewTagName("");
-            return;
-          }
-        }
-        const errorData = await res.json();
-        throw new Error(errorData.error || "Failed to create tag");
-      }
+      if (!res.ok) throw new Error("Failed to create tag");
 
       const newTag = await res.json();
       setTags((prev) => [...prev, newTag]);
       setSelectedTags((prev) => [...prev, newTag.id]);
       setNewTagName("");
     } catch (err) {
-      setError(err.message || "Failed to create tag. It may already exist.");
+      setError(err.message || "Failed to create tag");
     }
   };
 
+  // Image handling remains the same
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
-    // Reset previous errors
     setError(null);
 
-    // Validate file type
     const validImageTypes = [
       "image/jpeg",
       "image/jpg",
@@ -108,8 +97,6 @@ const CreatePost = () => {
       setError("Please select a valid image file (JPEG, PNG, GIF, WEBP)");
       return;
     }
-
-    // Validate file size
     if (file.size > 5 * 1024 * 1024) {
       setError("Image must be less than 5MB");
       return;
@@ -117,11 +104,8 @@ const CreatePost = () => {
 
     setFeaturedImage(file);
 
-    // Create preview using FileReader
     const reader = new FileReader();
-    reader.onload = (e) => {
-      setImagePreview(e.target.result);
-    };
+    reader.onload = (e) => setImagePreview(e.target.result);
     reader.onerror = () => {
       setError("Failed to load image preview.");
       setImagePreview(null);
@@ -169,19 +153,15 @@ const CreatePost = () => {
         imageUrl = await uploadImage(featuredImage);
       }
 
-      const selectedCategory = categories.find((c) => c.name === category);
-
       const postData = {
         title,
         content,
         excerpt,
         user_id: currentUser?.id,
-        category_id: selectedCategory?.id,
+        category_id: category,
         featured_image: imageUrl,
         tag_ids: selectedTags,
       };
-
-      console.log("Sending post data:", postData);
 
       const res = await fetch("http://localhost:5555/posts", {
         method: "POST",
@@ -192,15 +172,11 @@ const CreatePost = () => {
       const responseData = await res.json();
 
       if (!res.ok) {
-        console.error("Server response:", responseData);
         throw new Error(responseData.error || `Server error: ${res.status}`);
       }
 
-      const result = responseData;
-      alert("Post published successfully!");
-      navigate(`/posts/${result.id}`);
+      navigate(`/posts/${responseData.id}`);
     } catch (err) {
-      console.error("Error details:", err);
       setError(
         err.message ||
           "Failed to publish post. Please check your data and try again."
@@ -233,13 +209,6 @@ const CreatePost = () => {
     }
   };
 
-  // Filter tags based on selected category
-  const filteredTags = tags.filter((tag) => {
-    if (!category) return true;
-    const selectedCategory = categories.find((c) => c.name === category);
-    return tag.category_id === selectedCategory?.id;
-  });
-
   return (
     <main className="cp-container">
       <nav className="cp-breadcrumb">
@@ -253,99 +222,109 @@ const CreatePost = () => {
 
       {!currentUser && (
         <div className="cp-warning">
-          Warning: You are not logged in. Please <a href="/signin">sign in</a>{" "}
-          to create posts.
+          <span>⚠️</span> You are not logged in. Please{" "}
+          <a href="/signin">sign in</a> to create posts.
         </div>
       )}
 
       {error && <div className="cp-error">{error}</div>}
 
       <form className="cp-form" onSubmit={handleSubmit}>
+        {/* Title */}
         <label className="cp-label" htmlFor="title">
           Post Title
           <input
             type="text"
             id="title"
             className="cp-input"
-            placeholder="Enter an engaging title for your post"
+            placeholder="Enter an engaging title"
             maxLength={100}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
             disabled={isLoading || !currentUser}
+            autoFocus
           />
         </label>
 
+        {/* Category */}
         <label className="cp-label" htmlFor="category">
           Category
           <select
             id="category"
             className="cp-select"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
+            value={category || ""}
+            onChange={handleCategoryChange}
             required
             disabled={isLoading || !currentUser}
           >
             <option value="">Select a category</option>
             {categories.map((cat) => (
-              <option key={cat.id} value={cat.name}>
+              <option key={cat.id} value={cat.id}>
                 {cat.name}
               </option>
             ))}
           </select>
         </label>
 
-        {/* Tags Selection */}
+        {/* Tags Section */}
         <div className="cp-label">
           Tags <span className="cp-optional">(Optional)</span>
           <div className="cp-tags-container">
             {isLoadingTags ? (
               <div className="cp-loading-tags">Loading tags...</div>
-            ) : filteredTags.length > 0 ? (
-              <div className="cp-tags-list">
-                {filteredTags.map((tag) => (
-                  <label key={tag.id} className="cp-tag-checkbox">
-                    <input
-                      type="checkbox"
-                      checked={selectedTags.includes(tag.id)}
-                      onChange={() => handleTagToggle(tag.id)}
-                      disabled={isLoading || !currentUser}
-                    />
-                    <span className="cp-tag-label">{tag.name}</span>
-                  </label>
-                ))}
-              </div>
             ) : category ? (
-              <div className="cp-no-tags">
-                No tags available for {category}.{" "}
-                <button
-                  type="button"
-                  onClick={() => setNewTagName("")}
-                  className="cp-text-button"
-                >
-                  Create a new tag
-                </button>
-              </div>
+              filteredTags.length > 0 ? (
+                <div className="cp-tags-list">
+                  {filteredTags.map((tag) => (
+                    <span key={tag.id} className="cp-tag">
+                      #{tag.name}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSelectedTags((prev) =>
+                            prev.includes(tag.id)
+                              ? prev.filter((id) => id !== tag.id)
+                              : [...prev, tag.id]
+                          )
+                        }
+                        className="cp-tag-toggle"
+                        title={
+                          selectedTags.includes(tag.id)
+                            ? "Remove tag"
+                            : "Add tag"
+                        }
+                      >
+                        {selectedTags.includes(tag.id) ? "×" : "+"}
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <div className="cp-no-tags">
+                  No tags for <strong>{selectedCategory?.name}</strong>.
+                </div>
+              )
             ) : (
               <div className="cp-no-tags">
-                No tags available. Create one below!
+                Please select a category to see available tags.
               </div>
             )}
 
-            {/* Add New Tag */}
+            {/* New Tag Creation */}
             <div className="cp-new-tag">
               <input
                 type="text"
                 placeholder={
-                  category
-                    ? `Create new ${category} tag...`
+                  selectedCategory
+                    ? `Create new ${selectedCategory.name} tag...`
                     : "Create new tag..."
                 }
                 value={newTagName}
                 onChange={(e) => setNewTagName(e.target.value)}
-                disabled={isLoading || !currentUser}
+                disabled={isLoading || !currentUser || !category}
                 className="cp-new-tag-input"
-                onKeyPress={(e) => {
+                onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();
                     handleAddNewTag();
@@ -355,44 +334,25 @@ const CreatePost = () => {
               <button
                 type="button"
                 onClick={handleAddNewTag}
-                disabled={isLoading || !currentUser || !newTagName.trim()}
+                disabled={
+                  isLoading || !currentUser || !newTagName.trim() || !category
+                }
                 className="cp-add-tag-btn"
+                title="Add tag"
               >
-                Add Tag
+                +
               </button>
             </div>
-
-            {/* Selected Tags Preview */}
-            {selectedTags.length > 0 && (
-              <div className="cp-selected-tags">
-                <strong>Selected tags:</strong>
-                {selectedTags.map((tagId) => {
-                  const tag = tags.find((t) => t.id === tagId);
-                  return tag ? (
-                    <span key={tagId} className="cp-selected-tag">
-                      {tag.name}
-                      <button
-                        type="button"
-                        onClick={() => handleTagToggle(tagId)}
-                        className="cp-remove-tag-btn"
-                        title="Remove tag"
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ) : null;
-                })}
-              </div>
-            )}
           </div>
         </div>
 
+        {/* Excerpt */}
         <label className="cp-label" htmlFor="excerpt">
           Excerpt / Summary <span className="cp-optional">(Optional)</span>
           <textarea
             id="excerpt"
             className="cp-textarea"
-            placeholder="Write a short, compelling summary to catch your reader's attention."
+            placeholder="Write a short summary..."
             rows={3}
             value={excerpt}
             onChange={(e) => setExcerpt(e.target.value)}
@@ -400,6 +360,7 @@ const CreatePost = () => {
           />
         </label>
 
+        {/* Featured Image */}
         <label className="cp-label" htmlFor="image">
           Featured Image <span className="cp-optional">(Optional)</span>
           <input
@@ -422,32 +383,17 @@ const CreatePost = () => {
                 className="cp-remove-image"
                 onClick={clearImage}
                 disabled={isLoading}
+                title="Remove image"
               >
-                × Remove Image
+                ×
               </button>
             </div>
           )}
         </label>
 
+        {/* Post Content */}
         <label className="cp-label" htmlFor="content">
           Post Content
-          <div className="cp-editorToolbar">
-            <button type="button" title="Bold">
-              <strong>B</strong>
-            </button>
-            <button type="button" title="Italic">
-              <em>I</em>
-            </button>
-            <button type="button" title="Underline">
-              <u>U</u>
-            </button>
-            <button type="button" title="Link">
-              🔗
-            </button>
-            <button type="button" title="List">
-              • List
-            </button>
-          </div>
           <textarea
             id="content"
             className="cp-editor"
@@ -460,6 +406,7 @@ const CreatePost = () => {
           />
         </label>
 
+        {/* Actions */}
         <div className="cp-actions">
           <button
             type="button"

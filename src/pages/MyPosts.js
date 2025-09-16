@@ -8,7 +8,7 @@ const MyPosts = ({ isAuthenticated, user }) => {
   const [error, setError] = useState("");
   const [filter, setFilter] = useState("all");
 
-  const navigate = useNavigate(); // <-- useNavigate hook
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -22,7 +22,7 @@ const MyPosts = ({ isAuthenticated, user }) => {
         if (!user || !user.id) throw new Error("User not found");
 
         const response = await fetch(
-          `https://blogpost-app-3gtr.onrender.com/posts/my-posts?user_id=${user.id}`
+          `http://localhost:5555/posts/my-posts?user_id=${user.id}`
         );
         if (!response.ok) throw new Error("Failed to fetch posts");
 
@@ -44,10 +44,10 @@ const MyPosts = ({ isAuthenticated, user }) => {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(
-        `https://blogpost-app-3gtr.onrender.com/posts/${postId}`,
-        { method: "DELETE", headers: { Authorization: `Bearer ${token}` } }
-      );
+      const response = await fetch(`http://localhost:5555/posts/${postId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       if (!response.ok) throw new Error("Failed to delete post");
 
@@ -138,14 +138,14 @@ const MyPosts = ({ isAuthenticated, user }) => {
             <div
               key={post.id}
               className="post-card"
-              onClick={() => navigate(`/viewpost/${post.id}`)} // <-- React Router navigation
+              onClick={() => navigate(`/posts/${post.id}`)}
             >
               {post.featured_image && (
                 <img
                   src={
                     post.featured_image.startsWith("http")
                       ? post.featured_image
-                      : `https://blogpost-app-3gtr.onrender.com${post.featured_image}`
+                      : `http://localhost:5555${post.featured_image}`
                   }
                   alt={post.title}
                   className="post-image"
@@ -154,6 +154,18 @@ const MyPosts = ({ isAuthenticated, user }) => {
               )}
               <div className="post-content">
                 <h2 className="post-title">{post.title}</h2>
+
+                {/* Display tags */}
+                {post.tags?.length > 0 && (
+                  <div className="post-tags">
+                    {post.tags.map((tag) => (
+                      <span key={tag.id} className="post-tag">
+                        #{tag.name}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
                 <p className="post-excerpt">
                   {post.content?.split(" ").slice(0, 20).join(" ")}...
                 </p>
@@ -175,13 +187,13 @@ const MyPosts = ({ isAuthenticated, user }) => {
                 <Link
                   to={`/edit/${post.id}`}
                   className="edit-button"
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={(e) => e.stopPropagation()} // stop card navigation
                 >
                   <i className="fas fa-edit"></i> Edit
                 </Link>
                 <button
                   onClick={(e) => {
-                    e.stopPropagation();
+                    e.stopPropagation(); // stop card navigation
                     handleDelete(post.id);
                   }}
                   className="delete-button"
