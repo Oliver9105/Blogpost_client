@@ -23,7 +23,7 @@ const CreatePost = () => {
 
   // Fetch categories
   useEffect(() => {
-    fetch("http://localhost:5555/categories")
+    fetch("https://blogpost-app-qbhg.onrender.com/categories")
       .then((res) => res.json())
       .then((data) => setCategories(data))
       .catch(() => setCategories([]));
@@ -32,7 +32,7 @@ const CreatePost = () => {
   // Fetch tags
   useEffect(() => {
     setIsLoadingTags(true);
-    fetch("http://localhost:5555/tags")
+    fetch("https://blogpost-app-qbhg.onrender.com/tags")
       .then((res) => res.json())
       .then((data) => {
         setTags(data);
@@ -60,7 +60,7 @@ const CreatePost = () => {
     if (!newTagName.trim() || !category) return;
 
     try {
-      const res = await fetch("http://localhost:5555/tags", {
+      const res = await fetch("https://blogpost-app-qbhg.onrender.com/tags", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -124,10 +124,13 @@ const CreatePost = () => {
     formData.append("image", file);
 
     try {
-      const response = await fetch("http://localhost:5555/api/upload", {
-        method: "POST",
-        body: formData,
-      });
+      const response = await fetch(
+        "https://blogpost-app-qbhg.onrender.com/api/upload",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -163,7 +166,7 @@ const CreatePost = () => {
         tag_ids: selectedTags,
       };
 
-      const res = await fetch("http://localhost:5555/posts", {
+      const res = await fetch("https://blogpost-app-qbhg.onrender.com/posts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(postData),
