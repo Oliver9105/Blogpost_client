@@ -142,7 +142,7 @@ const ViewPost = ({ isAuthenticated, user }) => {
     } catch (err) {
       console.error("Error fetching replies:", err);
     }
-  }, [comments, id]);
+  }, [comments]);
 
   // Fetch all replies for the post (alternative approach)
   const fetchAllReplies = useCallback(async () => {
