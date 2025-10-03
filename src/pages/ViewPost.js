@@ -91,7 +91,6 @@ const ViewPost = ({ isAuthenticated, user }) => {
   // Fetch replies for a specific comment
   const fetchRepliesForComment = useCallback(async (commentId) => {
     try {
-      // You'll need to create this endpoint in your backend
       const repliesRes = await fetch(
         `${API_BASE_URL}/comments/${commentId}/replies`
       );
