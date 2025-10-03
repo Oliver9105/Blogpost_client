@@ -295,7 +295,7 @@ const Home = () => {
                       src={
                         post.featured_image.startsWith("http")
                           ? post.featured_image
-                          : `http://localhost:5555${post.featured_image}`
+                          : `https://blogpost-app-qbhg.onrender.com${post.featured_image}`
                       }
                       alt={post.title}
                       className="home-post-thumbnail-img"
