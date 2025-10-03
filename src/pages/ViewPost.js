@@ -391,29 +391,28 @@ const ViewPost = ({ isAuthenticated, user }) => {
   );
 
   // Toggle reply form
-  const toggleReplyForm = useCallback((commentId) => {
-    setReplyingTo((prev) => (prev === commentId ? null : commentId));
-    setReplyContent("");
-  }, []);
+  const toggleReplyForm = useCallback(
+    async (commentId) => {
+      if (replyingTo === commentId) {
+        // close reply form
+        setReplyingTo(null);
+        setReplyContent("");
+      } else {
+        // open reply form for this comment
+        setReplyingTo(commentId);
+        setReplyContent("");
 
-  // Format date helper
-  const formatDate = useCallback((dateString) => {
-    if (!dateString) return "";
-    try {
-      return new Date(dateString).toLocaleDateString();
-    } catch (err) {
-      return "";
-    }
-  }, []);
+        // 🔥 fetch replies for this specific comment
+        const commentReplies = await fetchRepliesForComment(commentId);
 
-  const formatDateTime = useCallback((dateString) => {
-    if (!dateString) return "";
-    try {
-      return new Date(dateString).toLocaleString();
-    } catch (err) {
-      return "";
-    }
-  }, []);
+        setReplies((prev) => [
+          ...prev.filter((r) => r.comment_id !== commentId), // remove old ones for this comment
+          ...commentReplies,
+        ]);
+      }
+    },
+    [replyingTo, fetchRepliesForComment]
+  );
 
   // Get image source helper
   const getImageSrc = useCallback((imagePath) => {
