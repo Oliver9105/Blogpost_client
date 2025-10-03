@@ -352,7 +352,7 @@ const ViewPost = ({ isAuthenticated, user }) => {
         setEmailLoading(false);
       }
     },
-    [email, showNotification]
+    [email, id, showNotification]
   );
 
   // Handle edit post
