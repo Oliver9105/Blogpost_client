@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import "../ViewPost.css";
@@ -8,382 +8,805 @@ const API_BASE_URL = "http://localhost:5555";
 const ViewPost = ({ isAuthenticated, user }) => {
   const { id } = useParams();
   const navigate = useNavigate();
+
+  // Main state
   const [post, setPost] = useState(null);
   const [comments, setComments] = useState([]);
+  const [replies, setReplies] = useState([]);
   const [relatedPosts, setRelatedPosts] = useState([]);
-  const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Comment states
+  const [newComment, setNewComment] = useState("");
   const [replyingTo, setReplyingTo] = useState(null);
   const [replyContent, setReplyContent] = useState("");
+  const [commentLoading, setCommentLoading] = useState(false);
+  const [replyLoading, setReplyLoading] = useState(false);
+
+  // UI states
   const [email, setEmail] = useState("");
+  const [emailLoading, setEmailLoading] = useState(false);
   const [notification, setNotification] = useState({ message: "", type: "" });
+  const [imageErrors, setImageErrors] = useState(new Set());
 
-  useEffect(() => {
-    const fetchPost = async () => {
+  // Memoized computed values
+  const postCategory = useMemo(
+    () => post?.category?.name || post?.category || "Uncategorized",
+    [post]
+  );
+
+  const postAuthor = useMemo(
+    () =>
+      post?.owner?.username ||
+      post?.author?.username ||
+      post?.author ||
+      "Unknown",
+    [post]
+  );
+
+  const postTags = useMemo(() => post?.tags || [], [post]);
+
+  // Check if current user is the owner of this post
+  const isPostOwner = useMemo(() => {
+    if (!isAuthenticated) return false;
+    if (!user || !user.id) return false;
+    if (!post) return false;
+
+    const authorId = post.author?.id || post.author_id || post.owner?.id;
+    if (!authorId) return false;
+
+    return String(user.id) === String(authorId);
+  }, [isAuthenticated, user, post]);
+
+  // Only show edit button if user owns the post
+  const canEditPost = useMemo(() => {
+    return isPostOwner && post?.id;
+  }, [isPostOwner, post]);
+
+  // Show notification helper
+  const showNotification = useCallback((message, type = "success") => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification({ message: "", type: "" }), 5000);
+  }, []);
+
+  // Image error handler
+  const handleImageError = useCallback((imageSrc) => {
+    setImageErrors((prev) => new Set([...prev, imageSrc]));
+  }, []);
+
+  // Fetch comments
+  const fetchComments = useCallback(async () => {
+    try {
+      const commentsRes = await fetch(`${API_BASE_URL}/posts/${id}/comments`);
+      if (commentsRes.ok) {
+        const commentsData = await commentsRes.json();
+        setComments(Array.isArray(commentsData) ? commentsData : []);
+      }
+    } catch (err) {
+      console.error("Error fetching comments:", err);
+    }
+  }, [id]);
+
+  // Fetch replies for a specific comment
+  const fetchRepliesForComment = useCallback(async (commentId) => {
+    try {
+      // You'll need to create this endpoint in your backend
+      const repliesRes = await fetch(
+        `${API_BASE_URL}/comments/${commentId}/replies`
+      );
+      if (repliesRes.ok) {
+        const repliesData = await repliesRes.json();
+        return Array.isArray(repliesData) ? repliesData : [];
+      }
+    } catch (err) {
+      console.error(`Error fetching replies for comment ${commentId}:`, err);
+    }
+    return [];
+  }, []);
+
+  // Fetch all replies (you might want to fetch them per comment instead)
+  const fetchAllReplies = useCallback(async () => {
+    try {
+      const repliesRes = await fetch(`${API_BASE_URL}/replies`);
+      if (repliesRes.ok) {
+        const repliesData = await repliesRes.json();
+        setReplies(Array.isArray(repliesData) ? repliesData : []);
+      }
+    } catch (err) {
+      console.error("Error fetching replies:", err);
+    }
+  }, []);
+
+  // Fetch related posts
+  const fetchRelatedPosts = useCallback(async () => {
+    try {
+      const relatedRes = await fetch(`${API_BASE_URL}/posts/${id}/related`);
+      if (relatedRes.ok) {
+        const relatedData = await relatedRes.json();
+        setRelatedPosts(Array.isArray(relatedData) ? relatedData : []);
+      }
+    } catch (err) {
+      console.error("Error fetching related posts:", err);
+    }
+  }, [id]);
+
+  // Fetch post data
+  const fetchPost = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const res = await fetch(`${API_BASE_URL}/posts/${id}`);
+
+      if (!res.ok) {
+        if (res.status === 404) {
+          throw new Error("Post not found");
+        }
+        if (res.status === 403) {
+          throw new Error("You are not authorized to view this post");
+        }
+        throw new Error(`Failed to fetch post (${res.status})`);
+      }
+
+      const data = await res.json();
+
+      // Check authorization for unpublished posts
+      if (!data.published) {
+        const authorId = data.author?.id || data.author_id;
+        if (!isAuthenticated || user?.id !== authorId) {
+          throw new Error("You are not authorized to view this post");
+        }
+      }
+
+      setPost(data);
+
+      // Fetch comments and related posts in parallel
+      await Promise.allSettled([
+        fetchComments(),
+        fetchAllReplies(),
+        fetchRelatedPosts(),
+      ]);
+    } catch (err) {
+      console.error("Error fetching post:", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [
+    id,
+    isAuthenticated,
+    user,
+    fetchComments,
+    fetchAllReplies,
+    fetchRelatedPosts,
+  ]);
+
+  // Handle comment submission
+  const handleCommentSubmit = useCallback(
+    async (e) => {
+      e.preventDefault();
+
+      if (!newComment.trim()) {
+        showNotification("Comment cannot be empty", "error");
+        return;
+      }
+
+      if (!isAuthenticated) {
+        showNotification("Please log in to comment", "error");
+        return;
+      }
+
+      const tempId = Date.now();
+      const tempComment = {
+        id: tempId,
+        content: newComment.trim(),
+        created_at: new Date().toISOString(),
+        author: { username: user?.username || "You" },
+      };
+
+      // Optimistic update
+      setComments((prevComments) => [...prevComments, tempComment]);
+      setNewComment("");
+      setCommentLoading(true);
+
       try {
-        setLoading(true);
-        const res = await fetch(`${API_BASE_URL}/posts/${id}`);
+        const res = await fetch(`${API_BASE_URL}/posts/${id}/comments`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(user?.token && { Authorization: `Bearer ${user.token}` }),
+          },
+          body: JSON.stringify({
+            content: newComment.trim(),
+            user_id: user?.id || 0,
+          }),
+        });
+
         if (!res.ok) {
-          if (res.status === 404) throw new Error("Post not found");
-          throw new Error("Failed to fetch post");
-        }
-        const data = await res.json();
-
-        if (!data.published) {
-          const authorId = data.author?.id || data.author_id;
-          if (!isAuthenticated || user?.id !== authorId) {
-            throw new Error("You are not authorized to view this post");
-          }
+          throw new Error(`Failed to post comment (${res.status})`);
         }
 
-        setPost(data);
+        const savedComment = await res.json();
 
-        const commentsRes = await fetch(`${API_BASE_URL}/posts/${id}/comments`);
-        if (commentsRes.ok) {
-          const commentsData = await commentsRes.json();
-          setComments(commentsData);
+        // Replace temp comment with saved comment
+        setComments((prevComments) =>
+          prevComments.map((c) => (c.id === tempId ? savedComment : c))
+        );
+
+        showNotification("Comment posted successfully!");
+      } catch (err) {
+        console.error("Error posting comment:", err);
+        showNotification("Failed to post comment. Please try again.", "error");
+
+        // Remove temp comment on error
+        setComments((prevComments) =>
+          prevComments.filter((c) => c.id !== tempId)
+        );
+      } finally {
+        setCommentLoading(false);
+      }
+    },
+    [newComment, isAuthenticated, user, id, showNotification]
+  );
+
+  // Handle reply submission
+  const handleReplySubmit = useCallback(
+    async (commentId, e) => {
+      e.preventDefault();
+
+      if (!replyContent.trim()) {
+        showNotification("Reply cannot be empty", "error");
+        return;
+      }
+
+      if (!isAuthenticated) {
+        showNotification("Please log in to reply", "error");
+        return;
+      }
+
+      const tempId = Date.now();
+      const newReply = {
+        id: tempId,
+        content: replyContent.trim(),
+        created_at: new Date().toISOString(),
+        author: { username: user?.username || "You" },
+        comment_id: commentId,
+      };
+
+      // Optimistic update
+      setReplies((prevReplies) => [...prevReplies, newReply]);
+      setReplyContent("");
+      setReplyingTo(null);
+      setReplyLoading(true);
+
+      try {
+        // Create a new reply endpoint in your backend
+        const res = await fetch(`${API_BASE_URL}/replies`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(user?.token && { Authorization: `Bearer ${user.token}` }),
+          },
+          body: JSON.stringify({
+            content: replyContent.trim(),
+            user_id: user?.id || 0,
+            post_id: id, // Replies are also associated with the post
+            comment_id: commentId, // Associate with the parent comment
+          }),
+        });
+
+        if (!res.ok) {
+          throw new Error(`Failed to post reply (${res.status})`);
         }
 
-        const relatedRes = await fetch(`${API_BASE_URL}/posts/${id}/related`);
-        if (relatedRes.ok) {
-          const relatedData = await relatedRes.json();
-          setRelatedPosts(relatedData);
+        const savedReply = await res.json();
+
+        // Replace temp reply with saved reply
+        setReplies((prevReplies) =>
+          prevReplies.map((reply) => (reply.id === tempId ? savedReply : reply))
+        );
+
+        showNotification("Reply posted successfully!");
+      } catch (err) {
+        console.error("Error posting reply:", err);
+        showNotification("Failed to post reply. Please try again.", "error");
+
+        // Remove temp reply on error
+        setReplies((prevReplies) =>
+          prevReplies.filter((reply) => reply.id !== tempId)
+        );
+      } finally {
+        setReplyLoading(false);
+      }
+    },
+    [replyContent, isAuthenticated, user, id, showNotification]
+  );
+
+  // Handle subscription
+  const handleSubscribe = useCallback(
+    async (e) => {
+      e.preventDefault();
+
+      if (!email.trim()) {
+        showNotification("Please enter your email", "error");
+        return;
+      }
+
+      if (!email.includes("@") || !email.includes(".")) {
+        showNotification("Please enter a valid email address", "error");
+        return;
+      }
+
+      setEmailLoading(true);
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/subscribe`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: email.trim() }),
+        });
+
+        if (res.ok) {
+          showNotification(`Successfully subscribed with ${email}!`);
+          setEmail("");
+        } else {
+          throw new Error("Subscription failed");
         }
       } catch (err) {
-        setError(err.message);
+        console.error("Error subscribing:", err);
+        showNotification("Failed to subscribe. Please try again.", "error");
       } finally {
-        setLoading(false);
+        setEmailLoading(false);
       }
-    };
+    },
+    [email, showNotification]
+  );
 
-    fetchPost();
-  }, [id, isAuthenticated, user]);
-
-  const handleCommentSubmit = async (e) => {
-    e.preventDefault();
-    if (!newComment.trim()) return;
-
-    const tempComment = {
-      id: Date.now(),
-      content: newComment,
-      created_at: new Date().toISOString(),
-      author: { username: "You" },
-      replies: [],
-    };
-
-    setComments([...comments, tempComment]);
-    setNewComment("");
-
-    try {
-      const res = await fetch(`${API_BASE_URL}/posts/${id}/comments`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          content: newComment,
-          author_id: user?.id || 0,
-        }),
-      });
-      if (!res.ok) throw new Error("Failed to post comment");
-      const savedComment = await res.json();
-      setComments((prev) =>
-        prev.map((c) => (c.id === tempComment.id ? savedComment : c))
-      );
-    } catch (err) {
-      setNotification({ message: "Error posting comment", type: "error" });
-      setComments((prev) => prev.filter((c) => c.id !== tempComment.id));
-      setTimeout(() => setNotification({ message: "", type: "" }), 3000);
-    }
-  };
-
-  const handleReplySubmit = (commentId, e) => {
-    e.preventDefault();
-    if (!replyContent.trim()) return;
-
-    const newReply = {
-      id: Date.now(),
-      author: { username: "You" },
-      content: replyContent,
-      created_at: new Date().toISOString(),
-    };
-
-    setComments(
-      comments.map((comment) =>
-        comment.id === commentId
-          ? { ...comment, replies: [...(comment.replies || []), newReply] }
-          : comment
-      )
-    );
-    setReplyContent("");
-    setReplyingTo(null);
-  };
-
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: post.title,
-        text: post.content?.substring(0, 100) + "...",
-        url: window.location.href,
-      });
-    } else {
-      alert("Web Share API not supported");
-    }
-  };
-
-  const handleSubscribe = (e) => {
-    e.preventDefault();
-    if (!email.includes("@")) return;
-    alert(`Subscribed with email: ${email}`);
-    setEmail("");
-  };
-
-  const handleEditPost = () => {
-    if (!isAuthenticated || user.id !== (post.author?.id || post.author_id)) {
-      alert("You cannot edit this post");
+  // Handle edit post
+  const handleEditPost = useCallback(() => {
+    if (!isAuthenticated) {
+      showNotification("Please log in to edit posts", "error");
       return;
     }
+
+    if (!canEditPost) {
+      showNotification("You can only edit your own posts", "error");
+      return;
+    }
+
+    if (!post?.id) {
+      showNotification("Post not found", "error");
+      return;
+    }
+
     navigate(`/edit/${id}`);
-  };
+  }, [isAuthenticated, canEditPost, post, navigate, id, showNotification]);
 
-  if (loading) return <div className="view-post-loading">Loading post...</div>;
-  if (error) return <div className="view-post-error">{error}</div>;
+  // Handle related post navigation
+  const handleRelatedPostClick = useCallback(
+    (postId) => {
+      navigate(`/posts/${postId}`);
+    },
+    [navigate]
+  );
 
-  const postCategory = post.category?.name || post.category || "Uncategorized";
-  const postAuthor =
-    post.owner?.username || post.author?.username || post.author || "Unknown";
-  const postTags = post.tags || [];
-  const postCommentsCount = comments.length;
+  // Toggle reply form
+  const toggleReplyForm = useCallback((commentId) => {
+    setReplyingTo((prev) => (prev === commentId ? null : commentId));
+    setReplyContent("");
+  }, []);
+
+  // Format date helper
+  const formatDate = useCallback((dateString) => {
+    if (!dateString) return "";
+    try {
+      return new Date(dateString).toLocaleDateString();
+    } catch (err) {
+      return "";
+    }
+  }, []);
+
+  const formatDateTime = useCallback((dateString) => {
+    if (!dateString) return "";
+    try {
+      return new Date(dateString).toLocaleString();
+    } catch (err) {
+      return "";
+    }
+  }, []);
+
+  // Get image source helper
+  const getImageSrc = useCallback((imagePath) => {
+    if (!imagePath) return "";
+    if (imagePath.startsWith("http")) return imagePath;
+    return `${API_BASE_URL}${imagePath}`;
+  }, []);
+
+  // Get replies for a specific comment
+  const getRepliesForComment = useCallback(
+    (commentId) => {
+      return replies.filter((reply) => reply.comment_id === commentId);
+    },
+    [replies]
+  );
+
+  // Keyboard event handlers for accessibility
+  const handleKeyDown = useCallback((e, callback) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      callback();
+    }
+  }, []);
+
+  // Initial data fetch
+  useEffect(() => {
+    if (id) {
+      fetchPost();
+    }
+  }, [id, fetchPost]);
+
+  // Clear notification when component unmounts
+  useEffect(() => {
+    return () => {
+      setNotification({ message: "", type: "" });
+    };
+  }, []);
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="view-post-loading" role="status" aria-live="polite">
+        <div className="loading-spinner" aria-hidden="true"></div>
+        Loading post...
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="view-post-error" role="alert" aria-live="assertive">
+        <h2>Error</h2>
+        <p>{error}</p>
+        <button onClick={fetchPost} className="retry-button" disabled={loading}>
+          {loading ? "Retrying..." : "Try Again"}
+        </button>
+      </div>
+    );
+  }
+
+  // No post found
+  if (!post) {
+    return (
+      <div className="view-post-error" role="alert">
+        <h2>Post Not Found</h2>
+        <p>The requested post could not be found.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="view-post">
+      {/* Notification Bar */}
       {notification.message && (
-        <div className={`view-post-notification ${notification.type}`}>
+        <div
+          className={`view-post-notification ${notification.type}`}
+          role="alert"
+          aria-live="polite"
+        >
           {notification.message}
         </div>
       )}
+
       <div className="view-post-container">
         <main>
+          {/* Article Header */}
           <header className="view-post-article-header">
             <h1 className="view-post-article-title">{post.title}</h1>
             <div className="view-post-article-meta">
               <span className="view-post-user">
                 By <span className="view-post-user-name">{postAuthor}</span>
               </span>
-              <span className="view-post-publish-date">
-                {post.created_at &&
-                  new Date(post.created_at).toLocaleDateString()}
-              </span>
+              <time
+                className="view-post-publish-date"
+                dateTime={post.created_at}
+              >
+                {formatDate(post.created_at)}
+              </time>
               <span className="view-post-tag">{postCategory}</span>
               <span className="view-post-comment-count">
-                {postCommentsCount} comments
+                {comments.length}{" "}
+                {comments.length === 1 ? "comment" : "comments"}
               </span>
-              <button
-                className="view-post-share-button"
-                onClick={handleShare}
-                type="button"
-              >
-                Share
-              </button>
-              {isAuthenticated &&
-                user.id === (post.author?.id || post.author_id) && (
-                  <button
-                    className="view-post-edit-button"
-                    onClick={handleEditPost}
-                    type="button"
-                  >
-                    Edit Post
-                  </button>
-                )}
+
+              {/* Edit button - only visible to post owner */}
+              {isAuthenticated && canEditPost && (
+                <button
+                  className="view-post-edit-button"
+                  onClick={handleEditPost}
+                  type="button"
+                  aria-label={`Edit post: ${post.title}`}
+                  data-testid="edit-post-button"
+                >
+                  Edit
+                </button>
+              )}
             </div>
           </header>
 
-          {post.featured_image && (
+          {/* Featured Image */}
+          {post.featured_image && !imageErrors.has(post.featured_image) && (
             <div className="view-post-featured-image">
               <img
-                src={
-                  post.featured_image.startsWith("http")
-                    ? post.featured_image
-                    : `http://localhost:5555${post.featured_image}`
-                }
+                src={getImageSrc(post.featured_image)}
                 alt={post.title}
-                onError={(e) => {
-                  e.target.style.display = "none";
-                }}
+                onError={() => handleImageError(post.featured_image)}
+                loading="lazy"
               />
             </div>
           )}
 
+          {/* Tags */}
           {postTags.length > 0 && (
             <div
               className="view-post-article-meta"
               style={{ marginBottom: 20 }}
             >
               {postTags.map((tag) => (
-                <span key={tag.id} className="view-post-tag">
-                  #{tag.name}
+                <span key={tag.id || tag.name} className="view-post-tag">
+                  #{tag.name || tag}
                 </span>
               ))}
             </div>
           )}
 
+          {/* Article Content */}
           <div className="view-post-article-content">
-            <p>{post.excerpt}</p>
-            <ReactMarkdown>{post.content}</ReactMarkdown>
+            {post.excerpt && <p className="post-excerpt">{post.excerpt}</p>}
+            <div className="post-content">
+              <ReactMarkdown>{post.content}</ReactMarkdown>
+            </div>
           </div>
 
+          {/* Comments Section */}
           <section className="view-post-comments-section">
             <h2 className="view-post-comments-title">
-              Comments ({postCommentsCount})
+              Comments ({comments.length})
             </h2>
-            {postCommentsCount === 0 && (
-              <div className="view-post-no-comments">No comments yet.</div>
-            )}
-            {comments.map((comment) => (
-              <div key={comment.id} className="view-post-comment">
-                <div className="view-post-comment-header">
-                  <div className="view-post-comment-user-info">
-                    <span className="view-post-comment-user">
-                      {comment.author?.username || "Anonymous"}
-                    </span>
-                    <span className="view-post-comment-time">
-                      {comment.created_at &&
-                        new Date(comment.created_at).toLocaleString()}
-                    </span>
-                  </div>
-                  <button
-                    className="view-post-comment-reply"
-                    onClick={() =>
-                      setReplyingTo(
-                        replyingTo === comment.id ? null : comment.id
-                      )
-                    }
-                  >
-                    Reply
-                  </button>
-                </div>
-                <div className="view-post-comment-content">
-                  {comment.content}
-                </div>
-                {replyingTo === comment.id && (
-                  <form
-                    className="view-post-reply-form"
-                    onSubmit={(e) => handleReplySubmit(comment.id, e)}
-                  >
-                    <textarea
-                      value={replyContent}
-                      onChange={(e) => setReplyContent(e.target.value)}
-                      placeholder="Write a reply..."
-                    />
-                    <div className="view-post-reply-actions">
-                      <button type="submit">Post Reply</button>
-                      <button
-                        type="button"
-                        className="view-post-cancel-reply"
-                        onClick={() => setReplyingTo(null)}
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </form>
-                )}
-                {comment.replies?.map((reply) => (
-                  <div
-                    key={reply.id}
-                    className="view-post-comment view-post-comment-reply"
-                  >
-                    <div className="view-post-comment-header">
-                      <div className="view-post-comment-user-info">
-                        <span className="view-post-comment-user">
-                          {reply.author?.username || "Anonymous"}
-                        </span>
-                        <span className="view-post-comment-time">
-                          {reply.created_at &&
-                            new Date(reply.created_at).toLocaleString()}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="view-post-comment-content">
-                      {reply.content}
-                    </div>
-                  </div>
-                ))}
+
+            {comments.length === 0 ? (
+              <div className="view-post-no-comments">
+                No comments yet. Be the first to comment!
               </div>
-            ))}
+            ) : (
+              <div className="comments-list">
+                {comments.map((comment) => {
+                  const commentReplies = getRepliesForComment(comment.id);
+                  return (
+                    <article key={comment.id} className="view-post-comment">
+                      <div className="view-post-comment-header">
+                        <div className="view-post-comment-user-info">
+                          <span className="view-post-comment-user">
+                            {comment.author?.username || "Anonymous"}
+                          </span>
+                          <time
+                            className="view-post-comment-time"
+                            dateTime={comment.created_at}
+                          >
+                            {formatDateTime(comment.created_at)}
+                          </time>
+                        </div>
+                        <button
+                          className="view-post-comment-reply-btn"
+                          onClick={() => toggleReplyForm(comment.id)}
+                          onKeyDown={(e) =>
+                            handleKeyDown(e, () => toggleReplyForm(comment.id))
+                          }
+                          aria-expanded={replyingTo === comment.id}
+                          aria-label="Reply to this comment"
+                        >
+                          Reply
+                        </button>
+                      </div>
+                      <div className="view-post-comment-content">
+                        {comment.content}
+                      </div>
+
+                      {/* Reply Form */}
+                      {replyingTo === comment.id && (
+                        <form
+                          className="view-post-reply-form"
+                          onSubmit={(e) => handleReplySubmit(comment.id, e)}
+                        >
+                          <label
+                            htmlFor={`reply-${comment.id}`}
+                            className="sr-only"
+                          >
+                            Write a reply to{" "}
+                            {comment.author?.username || "this comment"}
+                          </label>
+                          <textarea
+                            id={`reply-${comment.id}`}
+                            value={replyContent}
+                            onChange={(e) => setReplyContent(e.target.value)}
+                            placeholder="Write a reply..."
+                            rows="3"
+                            required
+                            aria-required="true"
+                          />
+                          <div className="view-post-reply-actions">
+                            <button
+                              type="submit"
+                              disabled={!replyContent.trim() || replyLoading}
+                            >
+                              {replyLoading ? "Posting..." : "Post Reply"}
+                            </button>
+                            <button
+                              type="button"
+                              className="view-post-cancel-reply"
+                              onClick={() => setReplyingTo(null)}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </form>
+                      )}
+
+                      {/* Replies */}
+                      {commentReplies.length > 0 && (
+                        <div className="replies-list">
+                          {commentReplies.map((reply) => (
+                            <article
+                              key={reply.id}
+                              className="view-post-comment view-post-comment-reply"
+                            >
+                              <div className="view-post-comment-header">
+                                <div className="view-post-comment-user-info">
+                                  <span className="view-post-comment-user">
+                                    {reply.author?.username || "Anonymous"}
+                                  </span>
+                                  <time
+                                    className="view-post-comment-time"
+                                    dateTime={reply.created_at}
+                                  >
+                                    {formatDateTime(reply.created_at)}
+                                  </time>
+                                </div>
+                              </div>
+                              <div className="view-post-comment-content">
+                                {reply.content}
+                              </div>
+                            </article>
+                          ))}
+                        </div>
+                      )}
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Add Comment Form */}
             <form
               className="view-post-add-comment"
               onSubmit={handleCommentSubmit}
             >
-              <h4>Add a Comment</h4>
+              <h3>Add a Comment</h3>
+              {!isAuthenticated && (
+                <p className="login-prompt">
+                  Please <a href="/login">log in</a> to post a comment.
+                </p>
+              )}
+              <label htmlFor="new-comment" className="sr-only">
+                Write your comment
+              </label>
               <textarea
+                id="new-comment"
                 placeholder="Add a comment..."
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
+                disabled={!isAuthenticated}
+                rows="4"
+                aria-required="true"
+                required
               />
               <button
                 className="view-post-submit-comment"
                 type="submit"
-                disabled={!newComment.trim()}
+                disabled={
+                  !newComment.trim() || !isAuthenticated || commentLoading
+                }
               >
-                Post Comment
+                {commentLoading ? "Posting..." : "Post Comment"}
               </button>
             </form>
           </section>
         </main>
+
+        {/* Sidebar */}
         <aside>
+          {/* Related Posts Widget */}
           <div className="view-post-sidebar-widget">
             <h3 className="view-post-widget-title">Related Posts</h3>
-            {relatedPosts.map((rp) => (
-              <div
-                key={rp.id}
-                className="view-post-related-post"
-                onClick={() => navigate(`/posts/${rp.id}`)}
-                style={{ cursor: "pointer" }}
-              >
-                {rp.featured_image && (
-                  <div className="view-post-related-image">
-                    <img
-                      src={
-                        rp.featured_image.startsWith("http")
-                          ? rp.featured_image
-                          : `http://localhost:5555${rp.featured_image}`
-                      }
-                      alt={rp.title}
-                    />
-                  </div>
-                )}
-                <div className="view-post-related-post-category">
-                  {rp.category?.name || rp.category || "Uncategorized"}
-                </div>
-                <div className="view-post-related-post-title">{rp.title}</div>
-                <div className="view-post-related-post-user">
-                  By {rp.owner?.username || rp.author?.username || "Unknown"}
-                </div>
-                <div className="view-post-related-post-excerpt">
-                  {rp.excerpt}
-                </div>
+            {relatedPosts.length === 0 ? (
+              <p className="no-related-posts">No related posts found.</p>
+            ) : (
+              <div className="related-posts-list">
+                {relatedPosts.map((rp) => (
+                  <article
+                    key={rp.id}
+                    className="view-post-related-post"
+                    onClick={() => handleRelatedPostClick(rp.id)}
+                    onKeyDown={(e) =>
+                      handleKeyDown(e, () => handleRelatedPostClick(rp.id))
+                    }
+                    tabIndex="0"
+                    role="button"
+                    aria-label={`Read post: ${rp.title}`}
+                  >
+                    {rp.featured_image &&
+                      !imageErrors.has(rp.featured_image) && (
+                        <div className="view-post-related-image">
+                          <img
+                            src={getImageSrc(rp.featured_image)}
+                            alt={rp.title}
+                            onError={() => handleImageError(rp.featured_image)}
+                            loading="lazy"
+                          />
+                        </div>
+                      )}
+                    <div className="view-post-related-post-category">
+                      {rp.category?.name || rp.category || "Uncategorized"}
+                    </div>
+                    <h4 className="view-post-related-post-title">{rp.title}</h4>
+                    <div className="view-post-related-post-user">
+                      By{" "}
+                      {rp.owner?.username || rp.author?.username || "Unknown"}
+                    </div>
+                    {rp.excerpt && (
+                      <div className="view-post-related-post-excerpt">
+                        {rp.excerpt}
+                      </div>
+                    )}
+                  </article>
+                ))}
               </div>
-            ))}
+            )}
           </div>
+
+          {/* Subscribe Widget */}
           <div className="view-post-sidebar-widget">
             <h3 className="view-post-widget-title">Subscribe</h3>
-            <div className="view-post-subscribe-text">
+            <p className="view-post-subscribe-text">
               Get updates on new posts and discussions.
-            </div>
+            </p>
             <form
               className="view-post-subscribe-form"
               onSubmit={handleSubscribe}
             >
+              <label htmlFor="subscribe-email" className="sr-only">
+                Enter your email address
+              </label>
               <input
+                id="subscribe-email"
                 type="email"
                 placeholder="Your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                disabled={emailLoading}
+                required
+                aria-required="true"
               />
-              <button type="submit">Subscribe</button>
+              <button type="submit" disabled={!email.trim() || emailLoading}>
+                {emailLoading ? "Subscribing..." : "Subscribe"}
+              </button>
             </form>
           </div>
         </aside>
       </div>
+
+      {/* Footer */}
       <footer className="view-post-footer">
         <div className="view-post-footer-content">
           © 2025 BlogHub. All rights reserved.

@@ -315,7 +315,7 @@ const Home = () => {
                       ))}
                     </div>
                   )}
-                  <h3 className="home-post-title">✨ {post.title}</h3>
+                  <h3 className="home-post-title"> {post.title}</h3>
                   <p className="home-post-excerpt">{post.excerpt}</p>
                   <div className="home-post-meta">
                     <span>

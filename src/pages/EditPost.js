@@ -126,6 +126,8 @@ const EditPost = () => {
 
     try {
       let imageUrl = null;
+
+      // Only upload new image if a file was selected
       if (featuredImageFile) {
         const imgForm = new FormData();
         imgForm.append("image", featuredImageFile);
@@ -153,7 +155,16 @@ const EditPost = () => {
         tag_ids: tagIds && tagIds.length > 0 ? tagIds : [1],
         published: true,
       };
-      if (imageUrl) payload.featured_image = imageUrl;
+
+      // Preserve existing image or use new one
+      if (imageUrl) {
+        // New image was uploaded
+        payload.featured_image = imageUrl;
+      } else if (featuredImage && !featuredImageFile) {
+        // No new image selected, preserve existing image
+        payload.featured_image = featuredImage;
+      }
+      // If featuredImage is empty and no new file, don't include featured_image field
 
       const token = localStorage.getItem("token");
       const baseHeaders = token ? { Authorization: `Bearer ${token}` } : {};
@@ -202,30 +213,6 @@ const EditPost = () => {
     } catch (err) {
       console.error("❌ Error saving post:", err);
       alert(`Error saving post: ${err.message}`);
-    }
-  };
-
-  // Unused comment handler (prefixed with _)
-  const _handleCommentSubmit = async (commentText) => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (!user || !user.id) {
-      alert("You must be logged in to comment.");
-      return;
-    }
-    try {
-      const res = await fetch(`${API_BASE}/posts/${id}/comments`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-        },
-        body: JSON.stringify({ content: commentText, user_id: user.id }),
-      });
-      if (!res.ok)
-        throw new Error((await res.text()) || "Failed to post comment");
-    } catch (err) {
-      setError(err.message);
-      console.error("❌ Error posting comment:", err);
     }
   };
 
