@@ -390,6 +390,23 @@ const ViewPost = ({ isAuthenticated, user }) => {
     [navigate]
   );
 
+  // Utility formatters for displaying dates
+  const formatDate = (dateString) => {
+    const options = { year: "numeric", month: "short", day: "numeric" };
+    return new Date(dateString).toLocaleDateString(undefined, options);
+  };
+
+  const formatDateTime = (dateString) => {
+    const options = {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    };
+    return new Date(dateString).toLocaleString(undefined, options);
+  };
+
   // Toggle reply form
   const toggleReplyForm = useCallback(
     async (commentId) => {
