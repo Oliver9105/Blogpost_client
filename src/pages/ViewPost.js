@@ -3,15 +3,16 @@ import { useParams, useNavigate } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import "../ViewPost.css";
 
-const API_BASE_URL = "https://blogpost-app-qbhg.onrender.com";
+const API_BASE_URL = "http://localhost:5555";
 
 const ViewPost = ({ isAuthenticated, user }) => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  // Main state
+  // Main state - SEPARATE comments and replies
   const [post, setPost] = useState(null);
   const [comments, setComments] = useState([]);
+  const [replies, setReplies] = useState([]); // Separate state for replies
   const [relatedPosts, setRelatedPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -21,6 +22,7 @@ const ViewPost = ({ isAuthenticated, user }) => {
   const [replyingTo, setReplyingTo] = useState(null);
   const [replyContent, setReplyContent] = useState("");
   const [commentLoading, setCommentLoading] = useState(false);
+  const [replyLoading, setReplyLoading] = useState(false);
   const [expandedReplies, setExpandedReplies] = useState(new Set());
 
   // UI states
@@ -48,29 +50,52 @@ const ViewPost = ({ isAuthenticated, user }) => {
 
   // Check if current user is the owner of this post
   const isPostOwner = useMemo(() => {
-    // Must be authenticated
     if (!isAuthenticated) return false;
-
-    // Must have user object
     if (!user || !user.id) return false;
-
-    // Must have post object
     if (!post) return false;
 
-    // Get author ID from various possible locations in post object
     const authorId = post.author?.id || post.author_id || post.owner?.id;
-
-    // Must have valid author ID
     if (!authorId) return false;
 
-    // Compare user ID with author ID (ensure both are same type)
     return String(user.id) === String(authorId);
   }, [isAuthenticated, user, post]);
 
   // Only show edit button if user owns the post
   const canEditPost = useMemo(() => {
-    return isPostOwner && post?.id; // Extra check for post existence
+    return isPostOwner && post?.id;
   }, [isPostOwner, post]);
+
+  // Get replies for a specific comment
+  const getRepliesForComment = useCallback(
+    (commentId) => {
+      return replies.filter((reply) => reply.comment_id === commentId);
+    },
+    [replies]
+  );
+
+  // Check if comment has replies
+  const hasReplies = useCallback(
+    (commentId) => {
+      return getRepliesForComment(commentId).length > 0;
+    },
+    [getRepliesForComment]
+  );
+
+  // Get reply count for a comment
+  const getReplyCount = useCallback(
+    (commentId) => {
+      return getRepliesForComment(commentId).length;
+    },
+    [getRepliesForComment]
+  );
+
+  // Check if replies are expanded for a comment
+  const areRepliesExpanded = useCallback(
+    (commentId) => {
+      return expandedReplies.has(commentId);
+    },
+    [expandedReplies]
+  );
 
   // Show notification helper
   const showNotification = useCallback((message, type = "success") => {
@@ -93,7 +118,57 @@ const ViewPost = ({ isAuthenticated, user }) => {
       }
     } catch (err) {
       console.error("Error fetching comments:", err);
-      // Don't fail the whole page for comments
+    }
+  }, [id]);
+
+  // Fetch replies for this post (via comments)
+  const fetchReplies = useCallback(async () => {
+    try {
+      // Fetch replies for each comment
+      const allReplies = [];
+
+      // Get replies for each comment
+      for (const comment of comments) {
+        const repliesRes = await fetch(
+          `${API_BASE_URL}/replies?comment_id=${comment.id}`
+        );
+        if (repliesRes.ok) {
+          const repliesData = await repliesRes.json();
+          allReplies.push(...repliesData);
+        }
+      }
+
+      setReplies(allReplies);
+    } catch (err) {
+      console.error("Error fetching replies:", err);
+    }
+  }, [comments, id]);
+
+  // Fetch all replies for the post (alternative approach)
+  const fetchAllReplies = useCallback(async () => {
+    try {
+      // Since replies don't have post_id anymore, we need to fetch via comments
+      // First get all comments for this post, then get replies for each comment
+      const commentsRes = await fetch(`${API_BASE_URL}/posts/${id}/comments`);
+      if (commentsRes.ok) {
+        const commentsData = await commentsRes.json();
+        const allReplies = [];
+
+        // Get replies for each comment
+        for (const comment of commentsData) {
+          const repliesRes = await fetch(
+            `${API_BASE_URL}/replies?comment_id=${comment.id}`
+          );
+          if (repliesRes.ok) {
+            const repliesData = await repliesRes.json();
+            allReplies.push(...repliesData);
+          }
+        }
+
+        setReplies(allReplies);
+      }
+    } catch (err) {
+      console.error("Error fetching all replies:", err);
     }
   }, [id]);
 
@@ -107,7 +182,6 @@ const ViewPost = ({ isAuthenticated, user }) => {
       }
     } catch (err) {
       console.error("Error fetching related posts:", err);
-      // Don't fail the whole page for related posts
     }
   }, [id]);
 
@@ -141,15 +215,23 @@ const ViewPost = ({ isAuthenticated, user }) => {
 
       setPost(data);
 
-      // Fetch comments and related posts in parallel
-      await Promise.allSettled([fetchComments(), fetchRelatedPosts()]);
+      // Fetch comments first, then replies and related posts
+      await fetchComments();
+      await Promise.allSettled([fetchAllReplies(), fetchRelatedPosts()]);
     } catch (err) {
       console.error("Error fetching post:", err);
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  }, [id, isAuthenticated, user, fetchComments, fetchRelatedPosts]);
+  }, [
+    id,
+    isAuthenticated,
+    user,
+    fetchComments,
+    fetchAllReplies,
+    fetchRelatedPosts,
+  ]);
 
   // Handle comment submission
   const handleCommentSubmit = useCallback(
@@ -172,7 +254,6 @@ const ViewPost = ({ isAuthenticated, user }) => {
         content: newComment.trim(),
         created_at: new Date().toISOString(),
         author: { username: user?.username || "You" },
-        replies: [],
       };
 
       // Optimistic update
@@ -189,7 +270,7 @@ const ViewPost = ({ isAuthenticated, user }) => {
           },
           body: JSON.stringify({
             content: newComment.trim(),
-            author_id: user?.id || 0,
+            user_id: user?.id || 0,
           }),
         });
 
@@ -241,22 +322,17 @@ const ViewPost = ({ isAuthenticated, user }) => {
         author: { username: user?.username || "You" },
         content: replyContent.trim(),
         created_at: new Date().toISOString(),
+        comment_id: commentId,
       };
 
-      // Optimistic update
-      setComments((prevComments) =>
-        prevComments.map((comment) =>
-          comment.id === commentId
-            ? { ...comment, replies: [...(comment.replies || []), newReply] }
-            : comment
-        )
-      );
-
+      // Optimistic update - add to separate replies state
+      setReplies((prevReplies) => [...prevReplies, newReply]);
       setReplyContent("");
       setReplyingTo(null);
+      setReplyLoading(true);
 
       try {
-        const res = await fetch(`${API_BASE_URL}/posts/${id}/comments`, {
+        const res = await fetch(`${API_BASE_URL}/replies`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -264,55 +340,39 @@ const ViewPost = ({ isAuthenticated, user }) => {
           },
           body: JSON.stringify({
             content: replyContent.trim(),
-            author_id: user?.id || 0,
-            parent_id: commentId, // This makes it a reply
+            user_id: user?.id || 0,
+            comment_id: commentId,
           }),
         });
 
-        if (res.ok) {
-          const savedReply = await res.json();
-
-          // Replace temp reply with saved reply
-          setComments((prevComments) =>
-            prevComments.map((comment) =>
-              comment.id === commentId
-                ? {
-                    ...comment,
-                    replies: (comment.replies || []).map((reply) =>
-                      reply.id === tempId ? savedReply : reply
-                    ),
-                  }
-                : comment
-            )
-          );
-
-          // Automatically expand replies to show the new reply
-          setExpandedReplies((prev) => new Set([...prev, commentId]));
-
-          showNotification("Reply posted successfully!");
-        } else {
-          throw new Error("Failed to post reply");
+        if (!res.ok) {
+          throw new Error(`Failed to post reply (${res.status})`);
         }
+
+        const savedReply = await res.json();
+
+        // Replace temp reply with saved reply
+        setReplies((prevReplies) =>
+          prevReplies.map((reply) => (reply.id === tempId ? savedReply : reply))
+        );
+
+        // Automatically expand replies to show the new reply
+        setExpandedReplies((prev) => new Set([...prev, commentId]));
+
+        showNotification("Reply posted successfully!");
       } catch (err) {
         console.error("Error posting reply:", err);
         showNotification("Failed to post reply. Please try again.", "error");
 
         // Remove temp reply on error
-        setComments((prevComments) =>
-          prevComments.map((comment) =>
-            comment.id === commentId
-              ? {
-                  ...comment,
-                  replies: (comment.replies || []).filter(
-                    (reply) => reply.id !== tempId
-                  ),
-                }
-              : comment
-          )
+        setReplies((prevReplies) =>
+          prevReplies.filter((reply) => reply.id !== tempId)
         );
+      } finally {
+        setReplyLoading(false);
       }
     },
-    [replyContent, isAuthenticated, user, id, showNotification]
+    [replyContent, isAuthenticated, user, showNotification]
   );
 
   // Handle subscription
@@ -357,7 +417,6 @@ const ViewPost = ({ isAuthenticated, user }) => {
 
   // Handle edit post
   const handleEditPost = useCallback(() => {
-    // Double-check ownership before allowing edit
     if (!isAuthenticated) {
       showNotification("Please log in to edit posts", "error");
       return;
@@ -402,24 +461,6 @@ const ViewPost = ({ isAuthenticated, user }) => {
       return newSet;
     });
   }, []);
-
-  // Check if comment has replies
-  const hasReplies = useCallback((comment) => {
-    return comment.replies && comment.replies.length > 0;
-  }, []);
-
-  // Get reply count for a comment
-  const getReplyCount = useCallback((comment) => {
-    return comment.replies ? comment.replies.length : 0;
-  }, []);
-
-  // Check if replies are expanded for a comment
-  const areRepliesExpanded = useCallback(
-    (commentId) => {
-      return expandedReplies.has(commentId);
-    },
-    [expandedReplies]
-  );
 
   // Format date helper
   const formatDate = useCallback((dateString) => {
@@ -599,138 +640,148 @@ const ViewPost = ({ isAuthenticated, user }) => {
               </div>
             ) : (
               <div className="comments-list">
-                {comments.map((comment) => (
-                  <article key={comment.id} className="view-post-comment">
-                    <div className="view-post-comment-header">
-                      <div className="view-post-comment-user-info">
-                        <span className="view-post-comment-user">
-                          {comment.author?.username || "Anonymous"}
-                        </span>
-                        <time
-                          className="view-post-comment-time"
-                          dateTime={comment.created_at}
-                        >
-                          {formatDateTime(comment.created_at)}
-                        </time>
-                      </div>
-                      <div className="view-post-comment-actions">
-                        <button
-                          className="view-post-comment-reply"
-                          onClick={() => toggleReplyForm(comment.id)}
-                          onKeyDown={(e) =>
-                            handleKeyDown(e, () => toggleReplyForm(comment.id))
-                          }
-                          aria-expanded={replyingTo === comment.id}
-                          aria-label="Reply to this comment"
-                        >
-                          Reply
-                        </button>
-                      </div>
-                    </div>
-                    <div className="view-post-comment-content">
-                      {comment.content}
-                    </div>
+                {comments.map((comment) => {
+                  const commentReplies = getRepliesForComment(comment.id);
+                  const replyCount = getReplyCount(comment.id);
+                  const hasCommentReplies = hasReplies(comment.id);
+                  const isExpanded = areRepliesExpanded(comment.id);
 
-                    {/* Reply count and toggle - only show if comment has replies */}
-                    {hasReplies(comment) && (
-                      <div className="view-post-comment-reply-toggle">
-                        <button
-                          className={`view-post-replies-toggle ${
-                            areRepliesExpanded(comment.id)
-                              ? "expanded"
-                              : "collapsed"
-                          }`}
-                          onClick={() => toggleRepliesVisibility(comment.id)}
-                          onKeyDown={(e) =>
-                            handleKeyDown(e, () =>
-                              toggleRepliesVisibility(comment.id)
-                            )
-                          }
-                          aria-expanded={areRepliesExpanded(comment.id)}
-                          aria-label={`${
-                            areRepliesExpanded(comment.id) ? "Hide" : "Show"
-                          } ${getReplyCount(comment)} ${
-                            getReplyCount(comment) === 1 ? "reply" : "replies"
-                          }`}
-                        >
-                          <span className="reply-toggle-icon">
-                            {areRepliesExpanded(comment.id) ? "▼" : "▶"}
+                  return (
+                    <article key={comment.id} className="view-post-comment">
+                      <div className="view-post-comment-header">
+                        <div className="view-post-comment-user-info">
+                          <span className="view-post-comment-user">
+                            {comment.author?.username || "Anonymous"}
                           </span>
-                          <span className="reply-count-text">
-                            {getReplyCount(comment)}{" "}
-                            {getReplyCount(comment) === 1 ? "reply" : "replies"}
-                          </span>
-                        </button>
-                      </div>
-                    )}
-
-                    {/* Reply Form */}
-                    {replyingTo === comment.id && (
-                      <form
-                        className="view-post-reply-form"
-                        onSubmit={(e) => handleReplySubmit(comment.id, e)}
-                      >
-                        <label
-                          htmlFor={`reply-${comment.id}`}
-                          className="sr-only"
-                        >
-                          Write a reply to{" "}
-                          {comment.author?.username || "this comment"}
-                        </label>
-                        <textarea
-                          id={`reply-${comment.id}`}
-                          value={replyContent}
-                          onChange={(e) => setReplyContent(e.target.value)}
-                          placeholder="Write a reply..."
-                          rows="3"
-                          required
-                          aria-required="true"
-                        />
-                        <div className="view-post-reply-actions">
-                          <button type="submit" disabled={!replyContent.trim()}>
-                            Post Reply
-                          </button>
-                          <button
-                            type="button"
-                            className="view-post-cancel-reply"
-                            onClick={() => setReplyingTo(null)}
+                          <time
+                            className="view-post-comment-time"
+                            dateTime={comment.created_at}
                           >
-                            Cancel
+                            {formatDateTime(comment.created_at)}
+                          </time>
+                        </div>
+                        <div className="view-post-comment-actions">
+                          <button
+                            className="view-post-comment-reply-btn"
+                            onClick={() => toggleReplyForm(comment.id)}
+                            onKeyDown={(e) =>
+                              handleKeyDown(e, () =>
+                                toggleReplyForm(comment.id)
+                              )
+                            }
+                            aria-expanded={replyingTo === comment.id}
+                            aria-label="Reply to this comment"
+                          >
+                            Reply
                           </button>
                         </div>
-                      </form>
-                    )}
-
-                    {/* Replies - only show if expanded */}
-                    {hasReplies(comment) && areRepliesExpanded(comment.id) && (
-                      <div className="replies-list">
-                        {comment.replies.map((reply) => (
-                          <article
-                            key={reply.id}
-                            className="view-post-comment view-post-comment-reply"
-                          >
-                            <div className="view-post-comment-header">
-                              <div className="view-post-comment-user-info">
-                                <span className="view-post-comment-user">
-                                  {reply.author?.username || "Anonymous"}
-                                </span>
-                                <time
-                                  className="view-post-comment-time"
-                                  dateTime={reply.created_at}
-                                >
-                                  {formatDateTime(reply.created_at)}
-                                </time>
-                              </div>
-                            </div>
-                            <div className="view-post-comment-content">
-                              {reply.content}
-                            </div>
-                          </article>
-                        ))}
                       </div>
-                    )}
-                  </article>
-                ))}
+                      <div className="view-post-comment-content">
+                        {comment.content}
+                      </div>
+
+                      {/* Reply count and toggle - only show if comment has replies */}
+                      {hasCommentReplies && (
+                        <div className="view-post-comment-reply-toggle">
+                          <button
+                            className={`view-post-replies-toggle ${
+                              isExpanded ? "expanded" : "collapsed"
+                            }`}
+                            onClick={() => toggleRepliesVisibility(comment.id)}
+                            onKeyDown={(e) =>
+                              handleKeyDown(e, () =>
+                                toggleRepliesVisibility(comment.id)
+                              )
+                            }
+                            aria-expanded={isExpanded}
+                            aria-label={`${
+                              isExpanded ? "Hide" : "Show"
+                            } ${replyCount} ${
+                              replyCount === 1 ? "reply" : "replies"
+                            }`}
+                          >
+                            <span className="reply-toggle-icon">
+                              {isExpanded ? "▼" : "▶"}
+                            </span>
+                            <span className="reply-count-text">
+                              {replyCount}{" "}
+                              {replyCount === 1 ? "reply" : "replies"}
+                            </span>
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Reply Form */}
+                      {replyingTo === comment.id && (
+                        <form
+                          className="view-post-reply-form"
+                          onSubmit={(e) => handleReplySubmit(comment.id, e)}
+                        >
+                          <label
+                            htmlFor={`reply-${comment.id}`}
+                            className="sr-only"
+                          >
+                            Write a reply to{" "}
+                            {comment.author?.username || "this comment"}
+                          </label>
+                          <textarea
+                            id={`reply-${comment.id}`}
+                            value={replyContent}
+                            onChange={(e) => setReplyContent(e.target.value)}
+                            placeholder="Write a reply..."
+                            rows="3"
+                            required
+                            aria-required="true"
+                          />
+                          <div className="view-post-reply-actions">
+                            <button
+                              type="submit"
+                              disabled={!replyContent.trim() || replyLoading}
+                            >
+                              {replyLoading ? "Posting..." : "Post Reply"}
+                            </button>
+                            <button
+                              type="button"
+                              className="view-post-cancel-reply"
+                              onClick={() => setReplyingTo(null)}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </form>
+                      )}
+
+                      {/* Replies - only show if expanded */}
+                      {hasCommentReplies && isExpanded && (
+                        <div className="replies-list">
+                          {commentReplies.map((reply) => (
+                            <article
+                              key={reply.id}
+                              className="view-post-comment view-post-comment-reply"
+                            >
+                              <div className="view-post-comment-header">
+                                <div className="view-post-comment-user-info">
+                                  <span className="view-post-comment-user">
+                                    {reply.author?.username || "Anonymous"}
+                                  </span>
+                                  <time
+                                    className="view-post-comment-time"
+                                    dateTime={reply.created_at}
+                                  >
+                                    {formatDateTime(reply.created_at)}
+                                  </time>
+                                </div>
+                              </div>
+                              <div className="view-post-comment-content">
+                                {reply.content}
+                              </div>
+                            </article>
+                          ))}
+                        </div>
+                      )}
+                    </article>
+                  );
+                })}
               </div>
             )}
 
