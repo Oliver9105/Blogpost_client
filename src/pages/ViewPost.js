@@ -312,7 +312,7 @@ const ViewPost = ({ isAuthenticated, user }) => {
         );
       }
     },
-    [replyContent, isAuthenticated, user, showNotification]
+    [replyContent, isAuthenticated, user, id, showNotification]
   );
 
   // Handle subscription
@@ -352,7 +352,7 @@ const ViewPost = ({ isAuthenticated, user }) => {
         setEmailLoading(false);
       }
     },
-    [email, id, showNotification]
+    [email, showNotification]
   );
 
   // Handle edit post
