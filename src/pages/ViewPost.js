@@ -121,30 +121,9 @@ const ViewPost = ({ isAuthenticated, user }) => {
     }
   }, [id]);
 
-  // Fetch replies for this post (via comments)
-  const fetchReplies = useCallback(async () => {
-    try {
-      // Fetch replies for each comment
-      const allReplies = [];
+  // REMOVED: fetchReplies function since it was unused
 
-      // Get replies for each comment
-      for (const comment of comments) {
-        const repliesRes = await fetch(
-          `${API_BASE_URL}/replies?comment_id=${comment.id}`
-        );
-        if (repliesRes.ok) {
-          const repliesData = await repliesRes.json();
-          allReplies.push(...repliesData);
-        }
-      }
-
-      setReplies(allReplies);
-    } catch (err) {
-      console.error("Error fetching replies:", err);
-    }
-  }, [comments]);
-
-  // Fetch all replies for the post (alternative approach)
+  // Fetch all replies for the post
   const fetchAllReplies = useCallback(async () => {
     try {
       // Since replies don't have post_id anymore, we need to fetch via comments
