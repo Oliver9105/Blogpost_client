@@ -23,7 +23,7 @@ const CreatePost = () => {
 
   // Fetch categories
   useEffect(() => {
-    fetch("https://blogpost-app-qbhg.onrender.com/categories")
+    fetch("http://localhost:5555/categories")
       .then((res) => res.json())
       .then((data) => setCategories(data))
       .catch(() => setCategories([]));
@@ -32,7 +32,7 @@ const CreatePost = () => {
   // Fetch tags
   useEffect(() => {
     setIsLoadingTags(true);
-    fetch("https://blogpost-app-qbhg.onrender.com/tags")
+    fetch("http://localhost:5555/tags")
       .then((res) => res.json())
       .then((data) => {
         setTags(data);
@@ -60,7 +60,7 @@ const CreatePost = () => {
     if (!newTagName.trim() || !category) return;
 
     try {
-      const res = await fetch("https://blogpost-app-qbhg.onrender.com/tags", {
+      const res = await fetch("http://localhost:5555/tags", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -125,7 +125,7 @@ const CreatePost = () => {
 
     try {
       const response = await fetch(
-        "https://blogpost-app-qbhg.onrender.com/api/upload",
+        "http://localhost:5555/api/upload",
         {
           method: "POST",
           body: formData,
@@ -166,7 +166,7 @@ const CreatePost = () => {
         tag_ids: selectedTags,
       };
 
-      const res = await fetch("https://blogpost-app-qbhg.onrender.com/posts", {
+      const res = await fetch("http://localhost:5555/posts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(postData),

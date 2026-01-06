@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import "../ViewPost.css";
 
-const API_BASE_URL = "https://blogpost-app-qbhg.onrender.com";
+const API_BASE_URL = "http://localhost:5555";
 
 const ViewPost = ({ isAuthenticated, user }) => {
   const { id } = useParams();
