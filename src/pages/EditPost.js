@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "../EditPost.css";
 
-const API_BASE = "http://localhost:5555";
+const API_BASE = "https://blogpost-app-qbhg.onrender.com";
 
 const EditPost = () => {
   const { id } = useParams();

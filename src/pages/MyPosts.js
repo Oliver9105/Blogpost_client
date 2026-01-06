@@ -22,7 +22,7 @@ const MyPosts = ({ isAuthenticated, user }) => {
         if (!user || !user.id) throw new Error("User not found");
 
         const response = await fetch(
-          `http://localhost:5555/posts/my-posts?user_id=${user.id}`
+          `https://blogpost-app-qbhg.onrender.com/posts/my-posts?user_id=${user.id}`
         );
         if (!response.ok) throw new Error("Failed to fetch posts");
 
@@ -44,7 +44,7 @@ const MyPosts = ({ isAuthenticated, user }) => {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`http://localhost:5555/posts/${postId}`, {
+      const response = await fetch(`https://blogpost-app-qbhg.onrender.com/posts/${postId}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -145,7 +145,7 @@ const MyPosts = ({ isAuthenticated, user }) => {
                   src={
                     post.featured_image.startsWith("http")
                       ? post.featured_image
-                      : `http://localhost:5555${post.featured_image}`
+                      : `https://blogpost-app-qbhg.onrender.com${post.featured_image}`
                   }
                   alt={post.title}
                   className="post-image"
