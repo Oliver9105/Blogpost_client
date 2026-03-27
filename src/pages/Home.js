@@ -30,13 +30,19 @@ const Home = () => {
   // Fetch posts + categories + tags
   useEffect(() => {
     const fetchPosts = async () => {
+      const cached = sessionStorage.getItem("posts");
+      if (cached) {
+        setPosts(JSON.parse(cached).filter((p) => p.published));
+        setLoading(false);
+        return;
+      }
       try {
         setLoading(true);
         const response = await fetch("https://blogpost-app-qbhg.onrender.com/posts");
-        if (!response.ok)
-          throw new Error(`HTTP error! status: ${response.status}`);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
-        setPosts(data.filter((post) => post.published));
+        sessionStorage.setItem("posts", JSON.stringify(data));
+        setPosts(data.filter((p) => p.published));
       } catch (err) {
         console.error("Error fetching posts:", err);
       } finally {
@@ -45,12 +51,18 @@ const Home = () => {
     };
 
     const fetchCategories = async () => {
+      const cached = sessionStorage.getItem("categories");
+      if (cached) {
+        setCategories(JSON.parse(cached));
+        setCategoriesLoading(false);
+        return;
+      }
       try {
         setCategoriesLoading(true);
         const response = await fetch("https://blogpost-app-qbhg.onrender.com/categories");
-        if (!response.ok)
-          throw new Error(`HTTP error! status: ${response.status}`);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
+        sessionStorage.setItem("categories", JSON.stringify(data));
         setCategories(data);
       } catch (err) {
         console.error("Error fetching categories:", err);
@@ -60,12 +72,18 @@ const Home = () => {
     };
 
     const fetchTags = async () => {
+      const cached = sessionStorage.getItem("tags");
+      if (cached) {
+        setTags(JSON.parse(cached));
+        setTagsLoading(false);
+        return;
+      }
       try {
         setTagsLoading(true);
         const response = await fetch("https://blogpost-app-qbhg.onrender.com/tags");
-        if (!response.ok)
-          throw new Error(`HTTP error! status: ${response.status}`);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
+        sessionStorage.setItem("tags", JSON.stringify(data));
         setTags(data);
       } catch (err) {
         console.error("Error fetching tags:", err);
