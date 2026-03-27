@@ -164,22 +164,11 @@ const Home = () => {
       <section className="home-hero">
         <h1>Welcome to BlogHub ✨</h1>
         <p>Your space to share stories, insights, and ideas.</p>
-        <div className="home-hero-buttons">
-          {user ? (
-            <Link to="/create" className="home-hero-button primary">
-              ✏️ Write New Post
-            </Link>
-          ) : (
-            <>
-              <Link to="/login" className="home-hero-button">
-                🔑 Login
-              </Link>
-              <Link to="/register" className="home-hero-button primary">
-                📝 Sign Up
-              </Link>
-            </>
-          )}
-        </div>
+        {user && (
+          <Link to="/create" className="home-hero-button primary">
+            ✏️ Write New Post
+          </Link>
+        )}
       </section>
 
       {/* Toolbar */}
