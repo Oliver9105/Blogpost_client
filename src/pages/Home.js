@@ -146,18 +146,6 @@ const Home = () => {
     }
   });
 
-  if (loading) {
-    return (
-      <div className="home-container">
-        <div className="home-hero">
-          <h1>Welcome to BlogHub</h1>
-          <p>Your space to share stories, insights, and ideas.</p>
-        </div>
-        <div className="loading-posts">⏳ Loading posts...</div>
-      </div>
-    );
-  }
-
   return (
     <div className="home-container">
       {/* Hero */}
@@ -265,7 +253,11 @@ const Home = () => {
         </h2>
 
         <div className="home-posts-grid">
-          {visiblePosts.length > 0 ? (
+          {loading ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="home-post-card skeleton" />
+            ))
+          ) : visiblePosts.length > 0 ? (
             visiblePosts.map((post) => (
               <div
                 key={post.id}
